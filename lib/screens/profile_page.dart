@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../constants/strings.dart';
 import '../utils/shared_preferences.dart';
 import 'login_page.dart';
+import 'archived_items_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -26,10 +27,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          const SizedBox(height: 60),
           const Icon(
             Icons.person,
             size: 80,
@@ -38,6 +41,7 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 20),
           const Text(
             'Profile',
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
@@ -46,15 +50,29 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 10),
           const Text(
             'Manage your account settings',
+            textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 16,
               color: Colors.grey,
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.logout),
+          const SizedBox(height: 40),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ArchivedItemsPage(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.inventory_2_outlined),
+            label: const Text('Archive Items'),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
             onPressed: () => _logout(context),
-            tooltip: 'Logout',
+            icon: const Icon(Icons.logout),
+            label: const Text('Logout'),
           ),
         ],
       ),

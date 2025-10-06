@@ -58,6 +58,7 @@ class _InventoryPageState extends State<InventoryPage> {
         token: token,
         limit: limit,
         skip: skip,
+        archive: false,
       );
 
       setState(() {
@@ -152,18 +153,23 @@ class _InventoryPageState extends State<InventoryPage> {
                           ),
                           child: ListTile(
                             onTap: () async {
-                              final updated = await Navigator.of(context).push<Item>(
+                              final result = await Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (context) => ItemDetailsPage(item: item),
                                 ),
                               );
-                              if (updated is Item) {
+                              if (result is Item) {
                                 if (!mounted) return;
                                 setState(() {
-                                  final int idx = items.indexWhere((it) => it.id == updated.id);
+                                  final int idx = items.indexWhere((it) => it.id == result.id);
                                   if (idx != -1) {
-                                    items[idx] = updated;
+                                    items[idx] = result;
                                   }
+                                });
+                              } else if (result is Map && result['archivedId'] is String) {
+                                if (!mounted) return;
+                                setState(() {
+                                  items.removeWhere((it) => it.id == result['archivedId']);
                                 });
                               }
                             },

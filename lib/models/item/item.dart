@@ -6,6 +6,7 @@ class Item {
   final double price;
   final int quantity;
   final String inventoryId;
+  final bool archived;
   final String createdBy;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -18,6 +19,7 @@ class Item {
     required this.price,
     required this.quantity,
     required this.inventoryId,
+    required this.archived,
     required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
@@ -32,6 +34,7 @@ class Item {
       price: (json['price'] as num).toDouble(),
       quantity: json['quantity'] as int,
       inventoryId: json['inventory_id'] as String,
+      archived: json['archived'] as bool,
       createdBy: json['created_by'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
@@ -47,6 +50,7 @@ class Item {
       'price': price,
       'quantity': quantity,
       'inventory_id': inventoryId,
+      'archived': archived,
       'created_by': createdBy,
       'created_at': createdAt,
       'updated_at': updatedAt,

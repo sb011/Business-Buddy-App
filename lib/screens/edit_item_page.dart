@@ -78,6 +78,7 @@ class _EditItemPageState extends State<EditItemPage> {
         price: request.price,
         quantity: widget.item.quantity,
         inventoryId: widget.item.inventoryId,
+        archived: widget.item.archived,
         createdBy: widget.item.createdBy,
         createdAt: widget.item.createdAt,
         updatedAt: DateTime.now(),

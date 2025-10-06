@@ -63,6 +63,7 @@ class _AddStockPageState extends State<AddStockPage> {
         price: widget.item.price,
         quantity: widget.item.quantity + int.parse(_qtyController.text.trim()),
         inventoryId: widget.item.inventoryId,
+        archived: widget.item.archived,
         createdBy: widget.item.createdBy,
         createdAt: widget.item.createdAt,
         updatedAt: DateTime.now(),

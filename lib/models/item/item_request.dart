@@ -94,3 +94,25 @@ class UpdateStockRequest {
     return map;
   }
 }
+
+class ItemArchiveRequest {
+  final String itemId;
+  final bool isArchive;
+
+  ItemArchiveRequest({
+    required this.itemId,
+    required this.isArchive
+  });
+
+  factory ItemArchiveRequest.fromJson(Map<String, dynamic> json) {
+    return ItemArchiveRequest(
+      itemId: json['item_id'] as String,
+      isArchive: json['is_archive'] as bool,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    final map = {'item_id': itemId, 'is_archive': isArchive};
+    return map;
+  }
+}

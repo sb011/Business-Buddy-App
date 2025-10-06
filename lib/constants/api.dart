@@ -8,6 +8,7 @@ class ApiEndpoints {
   static const String createItem = "api/v1/inventory/item";
   static const String updateItem = "api/v1/inventory/item";
   static const String updateStock = "api/v1/inventory/item/stock";
-  static const String imageUpload = "api/v1/upload/image";
   static String itemHistory(String itemId) => "api/v1/inventory/item/$itemId/history";
+  static const String archiveItem = "api/v1/inventory/item/archive";
+  static const String imageUpload = "api/v1/upload/image";
 }
