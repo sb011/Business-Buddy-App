@@ -4,6 +4,7 @@ import '../constants/strings.dart';
 import '../utils/shared_preferences.dart';
 import 'login_page.dart';
 import 'archived_items_page.dart';
+import 'archived_expenses_page.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -67,6 +68,18 @@ class _ProfilePageState extends State<ProfilePage> {
             },
             icon: const Icon(Icons.inventory_2_outlined),
             label: const Text('Archive Items'),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ArchivedExpensesPage(),
+                ),
+              );
+            },
+            icon: const Icon(Icons.receipt_long_outlined),
+            label: const Text('Archive Expenses'),
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(

@@ -4,17 +4,16 @@ import '../api_calls/expense_apis.dart';
 import '../constants/strings.dart';
 import '../models/expense/expense.dart';
 import '../utils/shared_preferences.dart';
-import 'create_expense_page.dart';
 import 'expense_details_page.dart';
 
-class ExpensePage extends StatefulWidget {
-  const ExpensePage({super.key});
+class ArchivedExpensesPage extends StatefulWidget {
+  const ArchivedExpensesPage({super.key});
 
   @override
-  State<ExpensePage> createState() => _ExpensePageState();
+  State<ArchivedExpensesPage> createState() => _ArchivedExpensesPageState();
 }
 
-class _ExpensePageState extends State<ExpensePage> {
+class _ArchivedExpensesPageState extends State<ArchivedExpensesPage> {
   List<Expense> expenses = [];
   bool _isLoading = false;
   int limit = 10;
@@ -23,10 +22,10 @@ class _ExpensePageState extends State<ExpensePage> {
   @override
   void initState() {
     super.initState();
-    _fetchExpenses();
+    _fetchArchivedExpenses();
   }
 
-  Future<void> _fetchExpenses() async {
+  Future<void> _fetchArchivedExpenses() async {
     try {
       final String? token = await StorageService.getString(AppStrings.authToken);
       if (token == null) {
@@ -34,19 +33,20 @@ class _ExpensePageState extends State<ExpensePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Authentication token not found. Please login again.')),
         );
+        Navigator.of(context).pop();
         return;
       }
+
       setState(() => _isLoading = true);
-      final response = await ExpenseAPI.getExpenses(token: token, limit: limit, skip: skip, archive: false);
+      final response = await ExpenseAPI.getExpenses(token: token, limit: limit, skip: skip, archive: true);
       if (!mounted) return;
       setState(() {
-        expenses = response;
+        expenses = response.where((e) => e.archived).toList();
         _isLoading = false;
       });
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      print(e);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );
@@ -57,28 +57,13 @@ class _ExpensePageState extends State<ExpensePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Expenses'),
+        title: const Text('Archived Expenses'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final created = await Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const CreateExpensePage()),
-          );
-          if (created is Expense) {
-            if (!mounted) return;
-            setState(() {
-              expenses = [created, ...expenses];
-            });
-          }
-        },
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
       body: RefreshIndicator(
         onRefresh: () async {
-          await _fetchExpenses();
+          await _fetchArchivedExpenses();
         },
         child: _isLoading && expenses.isEmpty
             ? const Center(child: CircularProgressIndicator())
@@ -88,13 +73,13 @@ class _ExpensePageState extends State<ExpensePage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          Icons.money_off,
+                          Icons.receipt_long_outlined,
                           size: 80,
-                          color: Colors.orange,
+                          color: Colors.grey,
                         ),
                         SizedBox(height: 20),
                         Text(
-                          'No expenses found',
+                          'No archived expenses',
                           style: TextStyle(fontSize: 18, color: Colors.grey),
                         ),
                         Text(
@@ -123,19 +108,13 @@ class _ExpensePageState extends State<ExpensePage> {
                           onTap: () async {
                             final result = await Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (context) => ExpenseDetailsPage(expense: expense),
+                                builder: (context) => ExpenseDetailsPage(expense: expense, isArchived: true),
                               ),
                             );
-                            if (result is Expense) {
+                            if (result is Map && result['unarchivedId'] is String) {
                               if (!mounted) return;
                               setState(() {
-                                final int idx = expenses.indexWhere((e) => e.id == result.id);
-                                if (idx != -1) expenses[idx] = result;
-                              });
-                            } else if (result is Map && result['archivedId'] is String) {
-                              if (!mounted) return;
-                              setState(() {
-                                expenses.removeWhere((e) => e.id == result['archivedId']);
+                                expenses.removeWhere((e) => e.id == result['unarchivedId']);
                               });
                             }
                           },
@@ -156,10 +135,8 @@ class _ExpensePageState extends State<ExpensePage> {
                           subtitle: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              if ((expense.description).trim().isNotEmpty)
-                                Text(expense.description),
-                              if ((expense.description).trim().isNotEmpty)
-                                const SizedBox(height: 4),
+                              if (expense.description.trim().isNotEmpty) Text(expense.description),
+                              if (expense.description.trim().isNotEmpty) const SizedBox(height: 4),
                               Row(
                                 children: [
                                   Container(
@@ -208,4 +185,5 @@ class _ExpensePageState extends State<ExpensePage> {
     );
   }
 }
+
 

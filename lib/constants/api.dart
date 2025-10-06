@@ -10,5 +10,9 @@ class ApiEndpoints {
   static const String updateStock = "api/v1/inventory/item/stock";
   static String itemHistory(String itemId) => "api/v1/inventory/item/$itemId/history";
   static const String archiveItem = "api/v1/inventory/item/archive";
+  static const String createExpense = "api/v1/expense";
+  static const String getExpenses = "api/v1/expenses";
+  static const String updateExpense = "api/v1/expense";
+  static const String archiveExpense = "api/v1/expense/archive";
   static const String imageUpload = "api/v1/upload/image";
 }
