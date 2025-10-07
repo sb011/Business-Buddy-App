@@ -59,7 +59,7 @@ class BillItem {
       itemId: json['item_id'] as String,
       billId: json['bill_id'] as String,
       quantity: json['quantity'] as int,
-      pricePerUnit: json['price_per_unit'] as double,
+      pricePerUnit: (json['price_per_unit'] as num).toDouble(),
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );

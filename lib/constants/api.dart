@@ -16,5 +16,6 @@ class ApiEndpoints {
   static const String archiveExpense = "api/v1/expense/archive";
   static const String getBills = "api/v1/bills";
   static const String createBill = "api/v1/bill";
+  static const String getCustomers = "api/v1/customers";
   static const String imageUpload = "api/v1/upload/image";
 }

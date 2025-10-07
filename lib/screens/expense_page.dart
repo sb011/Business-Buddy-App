@@ -46,7 +46,6 @@ class _ExpensePageState extends State<ExpensePage> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      print(e);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: $e')),
       );

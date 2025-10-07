@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:business_buddy_app/models/inventory/inventory_request.dart';
 import 'package:business_buddy_app/models/item/item.dart';
 import 'package:business_buddy_app/models/item/item_request.dart';
 import 'package:business_buddy_app/models/item/item_response.dart';
@@ -15,13 +14,17 @@ class InventoryAPI {
     required String token,
     required int limit,
     required int skip,
-    required bool archive
+    required bool archive,
+    String? query,
   }) async {
     final Map<String, String> qp = {
       'limit': limit.toString(),
       'skip': skip.toString(),
       'archive': archive.toString()
     };
+    if (query != null && query.trim().isNotEmpty) {
+      qp['q'] = query.trim();
+    }
     final uri = Uri.parse(
       '$_baseUrl/${ApiEndpoints.inventoryItems}',
     ).replace(queryParameters: qp);

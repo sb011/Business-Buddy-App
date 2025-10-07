@@ -31,7 +31,7 @@ class BillResponse {
       items: (json['items'] as List<dynamic>)
           .map((item) => BillItem.fromJson(item as Map<String, dynamic>))
           .toList(),
-      totalAmount: json['total_amount'] as double,
+      totalAmount: (json['total_amount'] as num).toDouble(),
       createdBy: json['created_by'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),

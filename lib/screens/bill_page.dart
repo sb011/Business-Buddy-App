@@ -4,6 +4,7 @@ import '../constants/strings.dart';
 import '../models/bill/bill_response.dart';
 import '../utils/shared_preferences.dart';
 import 'create_bill_page.dart';
+import 'bill_details_page.dart';
 
 class BillPage extends StatefulWidget {
   const BillPage({super.key});
@@ -60,9 +61,15 @@ class _BillPageState extends State<BillPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          await Navigator.of(context).push(
+          final created = await Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => const CreateBillPage()),
           );
+          if (created is BillResponse) {
+            if (!mounted) return;
+            setState(() {
+              bills = [created, ...bills];
+            });
+          }
         },
         backgroundColor: Colors.green,
         child: const Icon(Icons.add, color: Colors.white),
@@ -111,6 +118,13 @@ class _BillPageState extends State<BillPage> {
                       return Card(
                         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         child: ListTile(
+                          onTap: () async {
+                            await Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => BillDetailsPage(bill: bill),
+                              ),
+                            );
+                          },
                           leading: CircleAvatar(
                             backgroundColor: Colors.green.shade100,
                             child: Text(
