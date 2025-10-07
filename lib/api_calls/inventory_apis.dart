@@ -1,6 +1,8 @@
 import 'dart:convert';
 
+import 'package:business_buddy_app/models/inventory/inventory_request.dart';
 import 'package:business_buddy_app/models/item/item.dart';
+import 'package:business_buddy_app/models/item/item_request.dart';
 import 'package:business_buddy_app/models/item/item_response.dart';
 import 'package:http/http.dart' as http;
 
@@ -52,7 +54,7 @@ class InventoryAPI {
 
   static Future<Item> createItem({
     required String token,
-    required createInventoryRequest,
+    required CreateItemRequest createItemRequest,
   }) async {
     final uri = Uri.parse('$_baseUrl/${ApiEndpoints.createItem}');
 
@@ -62,7 +64,7 @@ class InventoryAPI {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Bearer $token',
       },
-      body: jsonEncode(createInventoryRequest),
+      body: jsonEncode(createItemRequest.toJson()),
     );
 
     if (response.statusCode != 200 && response.statusCode != 201) {
@@ -85,7 +87,7 @@ class InventoryAPI {
 
   static Future<void> updateItem({
     required String token,
-    required updateItemRequest,
+    required UpdateItemRequest updateItemRequest,
   }) async {
     final uri = Uri.parse('$_baseUrl/${ApiEndpoints.updateItem}');
 
@@ -95,7 +97,7 @@ class InventoryAPI {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Bearer $token',
       },
-      body: jsonEncode(updateItemRequest),
+      body: jsonEncode(updateItemRequest.toJson()),
     );
 
     if (response.statusCode != 200 && response.statusCode != 201) {
@@ -115,7 +117,7 @@ class InventoryAPI {
 
   static Future<void> updateItemStock({
     required String token,
-    required updateStockRequest,
+    required UpdateStockRequest updateStockRequest,
   }) async {
     final uri = Uri.parse('$_baseUrl/${ApiEndpoints.updateStock}');
 
@@ -125,7 +127,7 @@ class InventoryAPI {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Bearer $token',
       },
-      body: jsonEncode(updateStockRequest),
+      body: jsonEncode(updateStockRequest.toJson()),
     );
 
     if (response.statusCode != 200 && response.statusCode != 201) {
@@ -185,7 +187,7 @@ class InventoryAPI {
     }
   }
 
-  static Future<void> archiveItem({required String token, required itemArchiveRequest}) async {
+  static Future<void> archiveItem({required String token, required ItemArchiveRequest itemArchiveRequest}) async {
     final uri = Uri.parse(
       '$_baseUrl/${ApiEndpoints.archiveItem}',
     );
@@ -196,7 +198,7 @@ class InventoryAPI {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Bearer $token',
       },
-      body: jsonEncode(itemArchiveRequest)
+      body: jsonEncode(itemArchiveRequest.toJson())
     );
 
     if (response.statusCode != 200 && response.statusCode != 201) {

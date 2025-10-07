@@ -81,7 +81,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
         return;
       }
 
-      final request = ItemArchiveRequest(itemId: _currentItem.id, isArchive: true).toJson();
+      final request = ItemArchiveRequest(itemId: _currentItem.id, isArchive: true);
       await InventoryAPI.archiveItem(token: token, itemArchiveRequest: request);
 
       if (!mounted) return;
@@ -144,7 +144,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
         return;
       }
 
-      final request = ItemArchiveRequest(itemId: _currentItem.id, isArchive: false).toJson();
+      final request = ItemArchiveRequest(itemId: _currentItem.id, isArchive: false);
       await InventoryAPI.archiveItem(token: token, itemArchiveRequest: request);
 
       if (!mounted) return;

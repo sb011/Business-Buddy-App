@@ -58,7 +58,7 @@ class _CreateItemPageState extends State<CreateItemPage> {
 
       final Item createdItem = await InventoryAPI.createItem(
         token: token,
-        createInventoryRequest: request.toJson(),
+        createItemRequest: request,
       );
 
       if (!mounted) return;

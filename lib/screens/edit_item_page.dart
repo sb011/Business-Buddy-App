@@ -67,7 +67,7 @@ class _EditItemPageState extends State<EditItemPage> {
 
       await InventoryAPI.updateItem(
         token: token,
-        updateItemRequest: request.toJson(),
+        updateItemRequest: request,
       );
 
       final Item updated = Item(

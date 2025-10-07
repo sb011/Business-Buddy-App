@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:business_buddy_app/models/auth/auth_request.dart';
 import 'package:http/http.dart' as http;
 
 import '../constants/api.dart';
@@ -8,7 +9,7 @@ class UserAPI {
 
   static Future<void> updateUserDetails({
     required String token,
-    required updateUserRequest
+    required UpdateUserRequest updateUserRequest
   }) async {
     final uri = Uri.parse('$_baseUrl/${ApiEndpoints.userUpdate}');
 
@@ -18,7 +19,7 @@ class UserAPI {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Bearer $token',
       },
-      body: jsonEncode(updateUserRequest),
+      body: jsonEncode(updateUserRequest.toJson()),
     );
 
     if (response.statusCode != 200 && response.statusCode != 201) {

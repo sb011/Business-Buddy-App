@@ -52,7 +52,7 @@ class _AddStockPageState extends State<AddStockPage> {
 
       await InventoryAPI.updateItemStock(
         token: token,
-        updateStockRequest: request.toJson(),
+        updateStockRequest: request,
       );
 
       final Item updated = Item(
