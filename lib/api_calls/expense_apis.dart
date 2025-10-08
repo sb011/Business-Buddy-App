@@ -46,12 +46,16 @@ class ExpenseAPI {
     required int limit,
     required int skip,
     required bool archive,
+    String? query,
   }) async {
     final Map<String, String> qp = {
       'limit': limit.toString(),
       'skip': skip.toString(),
       'archive': archive.toString(),
     };
+    if (query != null && query.trim().isNotEmpty) {
+      qp['q'] = query.trim();
+    }
 
     final uri = Uri.parse(
       '$_baseUrl/${ApiEndpoints.getExpenses}',
