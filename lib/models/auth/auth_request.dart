@@ -127,3 +127,41 @@ class UpdateUserRequest {
     };
   }
 }
+
+class UserToInventoryRequest {
+  final String mobileNumber;
+  final String role;
+
+  UserToInventoryRequest({required this.mobileNumber, required this.role});
+
+  factory UserToInventoryRequest.fromJson(Map<String, dynamic> json) {
+    return UserToInventoryRequest(
+      mobileNumber: json['mobile_number'] as String,
+      role: json['role'] as String,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'mobile_number': mobileNumber, 'role': role};
+  }
+}
+
+class AddUsersToInventoryRequest {
+  final List<UserToInventoryRequest> users;
+
+  AddUsersToInventoryRequest({
+    required this.users
+  });
+
+  factory AddUsersToInventoryRequest.fromJson(Map<String, dynamic> json) {
+    return AddUsersToInventoryRequest(
+      users: (json['users'] as List<dynamic>)
+          .map((item) => UserToInventoryRequest.fromJson(item as Map<String, dynamic>))
+          .toList(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {'users': users.map((user) => user.toJson()).toList()};
+  }
+}

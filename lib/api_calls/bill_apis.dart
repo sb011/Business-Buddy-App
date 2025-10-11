@@ -14,11 +14,16 @@ class AuthAPI {
     required String token,
     required int limit,
     required int skip,
+    String? searchQuery,
   }) async {
     final Map<String, String> qp = {
       'limit': limit.toString(),
       'skip': skip.toString(),
     };
+    
+    if (searchQuery != null && searchQuery.isNotEmpty) {
+      qp['q'] = searchQuery;
+    }
 
     final uri = Uri.parse(
       '$_baseUrl/${ApiEndpoints.getBills}',

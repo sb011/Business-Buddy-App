@@ -17,5 +17,8 @@ class ApiEndpoints {
   static const String getBills = "api/v1/bills";
   static const String createBill = "api/v1/bill";
   static const String getCustomers = "api/v1/customers";
+  static const String getInventoryUsers = "api/v1/inventory/users";
+  static const String addUsersToInventory = "api/v1/add/users/to/inventory";
+  static const String removeUserFromInventory = "api/v1/inventory/user";
   static const String imageUpload = "api/v1/upload/image";
 }

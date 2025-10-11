@@ -69,4 +69,92 @@ class AuthAPI {
       throw Exception('Failed to validate OTP. Status: ${response.statusCode}');
     }
   }
+
+  static Future<List<UserWithRole>> getInventoryUsers({
+    required String token,
+  }) async {
+    final uri = Uri.parse(
+      '$_baseUrl/${ApiEndpoints.getInventoryUsers}',
+    );
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    if (response.statusCode != 200) {
+      try {
+        final Map<String, dynamic> resp = json.decode(response.body);
+        final message =
+            resp['errorMessage']?.toString() ?? 'Failed to get inventory users.';
+        throw Exception(message);
+      } catch (_) {
+        throw Exception('Failed to get inventory users. Status: ${response.statusCode}');
+      }
+    } else {
+      final List<dynamic> expensesJson = json.decode(response.body);
+      return expensesJson.map((json) => UserWithRole.fromJson(json)).toList();
+    }
+  }
+
+  static Future<void> addUsersToInventory({
+    required String token,
+    required AddUsersToInventoryRequest addUsersToInventoryRequest
+  }) async {
+    final uri = Uri.parse(
+      '$_baseUrl/${ApiEndpoints.addUsersToInventory}',
+    );
+    final response = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(addUsersToInventoryRequest.toJson())
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      try {
+        final Map<String, dynamic> resp = json.decode(response.body);
+        final message =
+            resp['errorMessage']?.toString() ?? 'Failed to add users into inventory.';
+        throw Exception(message);
+      } catch (_) {
+        throw Exception('Failed to add users into inventory. Status: ${response.statusCode}');
+      }
+    }
+  }
+
+  static Future<void> removeUserFromInventory({
+    required String token,
+    required String userId
+  }) async {
+    final Map<String, String> qp = {
+      'id': userId.toString(),
+    };
+
+    final uri = Uri.parse(
+      '$_baseUrl/${ApiEndpoints.removeUserFromInventory}',
+    ).replace(queryParameters: qp);
+    final response = await http.delete(
+        uri,
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+          'Authorization': 'Bearer $token',
+        },
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      try {
+        final Map<String, dynamic> resp = json.decode(response.body);
+        final message =
+            resp['errorMessage']?.toString() ?? 'Failed to remove user from inventory.';
+        throw Exception(message);
+      } catch (_) {
+        throw Exception('Failed to remove user from inventory. Status: ${response.statusCode}');
+      }
+    }
+  }
 }

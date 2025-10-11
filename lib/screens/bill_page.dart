@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../api_calls/bill_apis.dart';
 import '../constants/strings.dart';
@@ -16,16 +17,41 @@ class BillPage extends StatefulWidget {
 class _BillPageState extends State<BillPage> {
   List<BillResponse> bills = [];
   bool _isLoading = false;
+  bool _isLoadingMore = false;
+  bool _hasReachedEnd = false;
   int limit = 10;
   int skip = 0;
+  final TextEditingController _searchController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
+  String _searchQuery = '';
+  Timer? _searchTimer;
 
   @override
   void initState() {
     super.initState();
     _fetchBills();
+    _scrollController.addListener(_onScroll);
   }
 
-  Future<void> _fetchBills() async {
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _scrollController.dispose();
+    _searchTimer?.cancel();
+    super.dispose();
+  }
+
+  void _onScroll() {
+    // Only trigger if we're near the bottom and not already loading
+    if (_scrollController.position.pixels >=
+        _scrollController.position.maxScrollExtent - 200) {
+      if (!_isLoadingMore && !_isLoading && !_hasReachedEnd && bills.isNotEmpty) {
+        _loadMoreBills();
+      }
+    }
+  }
+
+  Future<void> _fetchBills({String? query}) async {
     try {
       final String? token = await StorageService.getString(AppStrings.authToken);
       if (token == null) {
@@ -35,11 +61,19 @@ class _BillPageState extends State<BillPage> {
         );
         return;
       }
-      setState(() => _isLoading = true);
-      final response = await AuthAPI.getBills(token: token, limit: limit, skip: skip);
+      setState(() {
+        _isLoading = true;
+        _hasReachedEnd = false;
+      });
+      final response = await AuthAPI.getBills(
+        token: token, 
+        limit: limit, 
+        skip: skip,
+        searchQuery: query,
+      );
       if (!mounted) return;
       setState(() {
-        bills = response;
+        bills.addAll(response);
         _isLoading = false;
       });
     } catch (e) {
@@ -49,6 +83,75 @@ class _BillPageState extends State<BillPage> {
         SnackBar(content: Text('Error: $e')),
       );
     }
+  }
+
+  Future<void> _loadMoreBills() async {
+    if (_isLoadingMore) return;
+    
+    setState(() {
+      _isLoadingMore = true;
+    });
+
+    try {
+      final String? token = await StorageService.getString(AppStrings.authToken);
+      if (token == null) {
+        setState(() => _isLoadingMore = false);
+        return;
+      }
+
+      skip += limit;
+      final response = await AuthAPI.getBills(
+        token: token,
+        limit: limit,
+        skip: skip,
+        searchQuery: _searchQuery.isNotEmpty ? _searchQuery : null,
+      );
+
+      setState(() {
+        bills.addAll(response);
+        _isLoadingMore = false;
+        // If we got fewer items than requested, we've reached the end
+        if (response.length < limit) {
+          _hasReachedEnd = true;
+        }
+      });
+    } catch (e) {
+      setState(() => _isLoadingMore = false);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error loading more bills: $e')),
+      );
+    }
+  }
+
+  void _onSearchChanged(String query) {
+    setState(() {
+      _searchQuery = query;
+    });
+    
+    // Cancel previous timer
+    _searchTimer?.cancel();
+    
+    // Debounce search
+    _searchTimer = Timer(const Duration(milliseconds: 500), () {
+      if (_searchQuery == query) {
+        setState(() {
+          bills.clear();
+          skip = 0;
+        });
+        _fetchBills(query: query);
+      }
+    });
+  }
+
+  void _clearSearch() {
+    setState(() {
+      _searchController.clear();
+      _searchQuery = '';
+      bills.clear();
+      skip = 0;
+    });
+    _fetchBills();
   }
 
   @override
@@ -74,47 +177,78 @@ class _BillPageState extends State<BillPage> {
         backgroundColor: Colors.green,
         child: const Icon(Icons.add, color: Colors.white),
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await _fetchBills();
-        },
-        child: _isLoading && bills.isEmpty
-            ? const Center(child: CircularProgressIndicator())
-            : bills.isEmpty
-                ? const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.receipt_long,
-                          size: 80,
-                          color: Colors.green,
-                        ),
-                        SizedBox(height: 20),
-                        Text(
-                          'No bills found',
-                          style: TextStyle(fontSize: 18, color: Colors.grey),
-                        ),
-                        Text(
-                          'Pull down to refresh',
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: bills.length + (_isLoading ? 1 : 0),
-                    itemBuilder: (context, index) {
-                      if (index == bills.length) {
-                        return const Center(
-                          child: Padding(
-                            padding: EdgeInsets.all(16.0),
-                            child: CircularProgressIndicator(),
+      body: Column(
+        children: [
+          // Search Bar
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _searchController,
+              onChanged: _onSearchChanged,
+              decoration: InputDecoration(
+                hintText: 'Search bills by customer name or mobile...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear),
+                        onPressed: _clearSearch,
+                      )
+                    : null,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                filled: true,
+                fillColor: Colors.grey[100],
+              ),
+            ),
+          ),
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () async {
+                setState(() {
+                  bills.clear();
+                  skip = 0;
+                });
+                await _fetchBills(query: _searchQuery.isNotEmpty ? _searchQuery : null);
+              },
+              child: _isLoading && bills.isEmpty
+                  ? const Center(child: CircularProgressIndicator())
+                  : bills.isEmpty
+                      ? const Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.receipt_long,
+                                size: 80,
+                                color: Colors.green,
+                              ),
+                              SizedBox(height: 20),
+                              Text(
+                                'No bills found',
+                                style: TextStyle(fontSize: 18, color: Colors.grey),
+                              ),
+                              Text(
+                                'Pull down to refresh',
+                                style: TextStyle(fontSize: 14, color: Colors.grey),
+                              ),
+                            ],
                           ),
-                        );
-                      }
+                        )
+                      : ListView.builder(
+                          controller: _scrollController,
+                          itemCount: bills.length + (_isLoadingMore ? 1 : 0),
+                          itemBuilder: (context, index) {
+                            if (index == bills.length) {
+                              return const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(16.0),
+                                  child: CircularProgressIndicator(),
+                                ),
+                              );
+                            }
 
-                      final bill = bills[index];
+                            final bill = bills[index];
                       return Card(
                         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         child: ListTile(
@@ -168,8 +302,11 @@ class _BillPageState extends State<BillPage> {
                           isThreeLine: true,
                         ),
                       );
-                    },
-                  ),
+                          },
+                        ),
+            ),
+          ),
+        ],
       ),
     );
   }
