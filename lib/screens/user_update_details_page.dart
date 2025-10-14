@@ -1,11 +1,11 @@
 import 'package:business_buddy_app/models/auth/auth_request.dart';
+import 'package:business_buddy_app/screens/auth_page.dart';
 import 'package:flutter/material.dart';
 
 import '../api_calls/user_apis.dart';
 import '../constants/strings.dart';
 import '../utils/shared_preferences.dart';
 import 'main_navigation.dart';
-import 'login_page.dart';
 
 class UserUpdateDetailsPage extends StatefulWidget {
   final String id;
@@ -84,7 +84,7 @@ class _UserUpdateDetailsPageState extends State<UserUpdateDetailsPage> {
 
       setState(() => _isLoading = false);
       Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => LoginPage()),
+        MaterialPageRoute(builder: (context) => AuthPage()),
         (Route<dynamic> route) => false,
       );
       return;

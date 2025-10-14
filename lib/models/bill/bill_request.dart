@@ -28,16 +28,19 @@ class CreateBillCustomer {
 
 class CreateBillItem {
   final String itemId;
+  final String itemVariantId;
   final int quantity;
 
   CreateBillItem({
     required this.itemId,
+    required this.itemVariantId,
     required this.quantity,
   });
 
   factory CreateBillItem.fromJson(Map<String, dynamic> json) {
     return CreateBillItem(
         itemId: json['item_id'] as String,
+        itemVariantId: json['item_variant_id'] as String,
         quantity: json['quantity'] as int
     );
   }
@@ -45,6 +48,7 @@ class CreateBillItem {
   Map<String, dynamic> toJson() {
     return {
       'item_id': itemId,
+      'item_variant_id': itemVariantId,
       'quantity': quantity
     };
   }

@@ -1,14 +1,15 @@
 import 'package:business_buddy_app/api_calls/inventory_apis.dart';
 import 'package:business_buddy_app/models/item/item_response.dart';
+import 'package:business_buddy_app/models/item/item.dart';
 import 'package:flutter/material.dart';
 
 import '../constants/strings.dart';
 import '../utils/shared_preferences.dart';
 
 class ItemHistoryPage extends StatefulWidget {
-  final String itemId;
+  final Item item;
 
-  const ItemHistoryPage({super.key, required this.itemId});
+  const ItemHistoryPage({super.key, required this.item});
 
   @override
   State<ItemHistoryPage> createState() => _ItemHistoryPageState();
@@ -17,16 +18,23 @@ class ItemHistoryPage extends StatefulWidget {
 class _ItemHistoryPageState extends State<ItemHistoryPage> {
   bool _isLoading = false;
   List<ItemHistoryResponse> _history = [];
+  ItemVariant? _selectedVariant;
   int limit = 20;
   int skip = 0;
 
   @override
   void initState() {
     super.initState();
-    _fetchHistory();
+    // Auto-select the first variant if there's only one
+    if (widget.item.itemVariants.length == 1) {
+      _selectedVariant = widget.item.itemVariants.first;
+      _fetchHistory();
+    }
   }
 
   Future<void> _fetchHistory() async {
+    if (_selectedVariant == null) return;
+    
     setState(() => _isLoading = true);
     try {
       final String? token = await StorageService.getString(
@@ -45,9 +53,9 @@ class _ItemHistoryPageState extends State<ItemHistoryPage> {
         return;
       }
 
-      final items = await InventoryAPI.getItemHistory(
+      final items = await InventoryAPI.getItemVariantHistory(
         token: token,
-        itemId: widget.itemId,
+        itemVariantId: _selectedVariant!.id,
         limit: limit,
         skip: skip,
       );
@@ -65,19 +73,62 @@ class _ItemHistoryPageState extends State<ItemHistoryPage> {
     }
   }
 
+  void _onVariantChanged(ItemVariant? newVariant) {
+    setState(() {
+      _selectedVariant = newVariant;
+      _history.clear(); // Clear previous history
+      skip = 0; // Reset pagination
+    });
+    if (newVariant != null) {
+      _fetchHistory();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Item History'),
+        title: Text('${widget.item.name} - History'),
         backgroundColor: Colors.blue,
         foregroundColor: Colors.white,
       ),
-      body: _isLoading && _history.isEmpty
-          ? const Center(child: CircularProgressIndicator())
-          : _history.isEmpty
-          ? const Center(child: Text('No history found'))
-          : ListView.separated(
+      body: Column(
+        children: [
+          // Variant selection
+          if (widget.item.itemVariants.length > 1) ...[
+            Container(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('Select Variant:', style: TextStyle(fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<ItemVariant>(
+                    value: _selectedVariant,
+                    decoration: const InputDecoration(labelText: 'Variant'),
+                    items: widget.item.itemVariants.map((variant) {
+                      return DropdownMenuItem<ItemVariant>(
+                        value: variant,
+                        child: Text('${variant.name} - ₹${variant.price.toStringAsFixed(2)} (Stock: ${variant.quantity})'),
+                      );
+                    }).toList(),
+                    onChanged: _onVariantChanged,
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+          ],
+          
+          // History content
+          Expanded(
+            child: _selectedVariant == null
+                ? const Center(child: Text('Please select a variant to view history'))
+                : _isLoading && _history.isEmpty
+                    ? const Center(child: CircularProgressIndicator())
+                    : _history.isEmpty
+                        ? const Center(child: Text('No history found for this variant'))
+                        : ListView.separated(
               padding: const EdgeInsets.all(16),
               itemBuilder: (context, index) {
                 final h = _history[index];
@@ -166,6 +217,9 @@ class _ItemHistoryPageState extends State<ItemHistoryPage> {
               separatorBuilder: (_, __) => const SizedBox(height: 8),
               itemCount: _history.length,
             ),
+          ),
+        ],
+      ),
     );
   }
 }

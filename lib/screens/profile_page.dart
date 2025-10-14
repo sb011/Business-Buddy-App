@@ -1,8 +1,8 @@
+import 'package:business_buddy_app/screens/auth_page.dart';
 import 'package:flutter/material.dart';
 
 import '../constants/strings.dart';
 import '../utils/shared_preferences.dart';
-import 'login_page.dart';
 import 'archived_items_page.dart';
 import 'archived_expenses_page.dart';
 import 'inventory_users_page.dart';
@@ -21,7 +21,7 @@ class _ProfilePageState extends State<ProfilePage> {
     if (!context.mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(
-        builder: (context) => LoginPage(),
+        builder: (context) => AuthPage(),
       ),
           (Route<dynamic> route) => false,
     );

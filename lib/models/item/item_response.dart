@@ -1,6 +1,7 @@
 class ItemHistoryResponse {
   final String id;
   final String itemId;
+  final String itemVariantId;
   final String changeType;
   final int quantity;
   final int oldQuantity;
@@ -13,6 +14,7 @@ class ItemHistoryResponse {
   ItemHistoryResponse({
     required this.id,
     required this.itemId,
+    required this.itemVariantId,
     required this.changeType,
     required this.quantity,
     required this.oldQuantity,
@@ -27,6 +29,7 @@ class ItemHistoryResponse {
     return ItemHistoryResponse(
       id: json['id'] as String,
       itemId: json['item_id'] as String,
+      itemVariantId: json['item_variant_id'] as String,
       changeType: json['change_type'] as String,
       quantity: json['quantity'] as int,
       oldQuantity: json['old_quantity'] as int,
@@ -39,9 +42,10 @@ class ItemHistoryResponse {
   }
 
   Map<String, dynamic> toJson() {
-    final map = {
+    return {
       'id': id,
       'item_id': itemId,
+      'item_variant_id': itemVariantId,
       'change_type': changeType,
       'quantity': quantity,
       'old_quantity': oldQuantity,
@@ -51,6 +55,5 @@ class ItemHistoryResponse {
       'created_at': createdAt,
       'updated_at': updatedAt,
     };
-    return map;
   }
 }

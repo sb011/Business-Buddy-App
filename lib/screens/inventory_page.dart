@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:business_buddy_app/api_calls/inventory_apis.dart';
 import 'package:business_buddy_app/models/item/item.dart';
+import 'package:business_buddy_app/screens/auth_page.dart';
 import 'package:flutter/material.dart';
 
 import '../constants/strings.dart';
 import '../utils/shared_preferences.dart';
-import 'login_page.dart';
 import 'create_item_page.dart';
 import 'item_details_page.dart';
 
@@ -70,7 +70,7 @@ class _InventoryPageState extends State<InventoryPage> {
         );
 
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => LoginPage()),
+          MaterialPageRoute(builder: (context) => AuthPage()),
           (Route<dynamic> route) => false,
         );
         return;
@@ -368,7 +368,7 @@ class _InventoryPageState extends State<InventoryPage> {
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      'Qty: ${item.quantity}',
+                                      'Variants: ${item.itemVariants.length}',
                                       style: const TextStyle(
                                         fontSize: 12,
                                         color: Colors.grey,
@@ -378,26 +378,12 @@ class _InventoryPageState extends State<InventoryPage> {
                                 ),
                               ],
                             ),
-                            trailing: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  '₹${item.price.toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 16,
-                                    color: Colors.green,
-                                  ),
-                                ),
-                                Text(
-                                  'ID: ${item.id.substring(0, 8)}...',
-                                  style: const TextStyle(
-                                    fontSize: 10,
-                                    color: Colors.grey,
-                                  ),
-                                ),
-                              ],
+                            trailing: Text(
+                              'ID: ${item.id.substring(0, 8)}...',
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey,
+                              ),
                             ),
                             isThreeLine: true,
                           ),

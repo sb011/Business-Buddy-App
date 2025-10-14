@@ -23,6 +23,7 @@ class _CreateBillPageState extends State<CreateBillPage> {
   List<CreateBillItem> _billItems = [];
   List<Item> _searchResults = [];
   Map<String, Item> _billItemDetails = {}; // persist item details for added items
+  Map<String, ItemVariant> _billItemVariants = {}; // track variants for each bill item (itemId+variantId)
   bool _isSearchingCustomer = false;
   bool _isSearchingItems = false;
   bool _isSubmitting = false;
@@ -38,24 +39,11 @@ class _CreateBillPageState extends State<CreateBillPage> {
   double get _totalAmount {
     double total = 0;
     for (final billItem in _billItems) {
-      final item = _billItemDetails[billItem.itemId] ??
-          _searchResults.firstWhere(
-            (it) => it.id == billItem.itemId,
-            orElse: () => Item(
-              id: billItem.itemId,
-              name: 'Item',
-              description: '',
-              category: '',
-              price: 0,
-              quantity: 0,
-              inventoryId: '',
-              archived: false,
-              createdBy: '',
-              createdAt: DateTime.now(),
-              updatedAt: DateTime.now(),
-            ),
-          );
-      total += billItem.quantity * item.price;
+      final variantKey = '${billItem.itemId}_${billItem.itemVariantId}';
+      final variant = _billItemVariants[variantKey];
+      if (variant != null) {
+        total += billItem.quantity * variant.price;
+      }
     }
     return total;
   }
@@ -130,21 +118,79 @@ class _CreateBillPageState extends State<CreateBillPage> {
   }
 
   void _addItemToBill(Item item) {
-    final existingIndex = _billItems.indexWhere((it) => it.itemId == item.id);
+    if (item.itemVariants.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('This item has no variants available')),
+      );
+      return;
+    }
+
+    // If item has only one variant, add it directly
+    if (item.itemVariants.length == 1) {
+      final variant = item.itemVariants.first;
+      _addVariantToBill(item, variant);
+      return;
+    }
+
+    // Show variant selection dialog
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Select Variant for ${item.name}'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: item.itemVariants.map((variant) {
+            return ListTile(
+              title: Text(variant.name),
+              subtitle: Text('₹${variant.price.toStringAsFixed(2)} • Stock: ${variant.quantity}'),
+              onTap: () {
+                Navigator.of(context).pop();
+                _addVariantToBill(item, variant);
+              },
+            );
+          }).toList(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addVariantToBill(Item item, ItemVariant variant) {
+    // Check if this exact item-variant combination already exists
+    final existingIndex = _billItems.indexWhere((it) => it.itemId == item.id && it.itemVariantId == variant.id);
+    
     setState(() {
       _billItemDetails[item.id] = item; // persist details
+      final variantKey = '${item.id}_${variant.id}';
+      _billItemVariants[variantKey] = variant; // track variant for this specific combination
+      
       if (existingIndex >= 0) {
+        // If same item-variant combination exists, increase quantity
         final current = _billItems[existingIndex];
         final qty = current.quantity;
-        _billItems[existingIndex] = CreateBillItem(itemId: current.itemId, quantity: (qty + 1));
+        _billItems[existingIndex] = CreateBillItem(
+          itemId: current.itemId, 
+          itemVariantId: current.itemVariantId,
+          quantity: (qty + 1)
+        );
       } else {
-        _billItems = [..._billItems, CreateBillItem(itemId: item.id, quantity: 1)];
+        // If different variant of same item or new item, add as new entry
+        _billItems = [..._billItems, CreateBillItem(
+          itemId: item.id, 
+          itemVariantId: variant.id,
+          quantity: 1
+        )];
       }
     });
   }
 
-  void _updateItemQuantity(String itemId, int delta) {
-    final idx = _billItems.indexWhere((bi) => bi.itemId == itemId);
+  void _updateItemQuantity(String itemId, String itemVariantId, int delta) {
+    final idx = _billItems.indexWhere((bi) => bi.itemId == itemId && bi.itemVariantId == itemVariantId);
     if (idx < 0) return;
     setState(() {
       final current = _billItems[idx];
@@ -152,7 +198,11 @@ class _CreateBillPageState extends State<CreateBillPage> {
       if (qty <= 0) {
         _billItems.removeAt(idx);
       } else {
-        _billItems[idx] = CreateBillItem(itemId: current.itemId, quantity: qty);
+        _billItems[idx] = CreateBillItem(
+          itemId: current.itemId, 
+          itemVariantId: current.itemVariantId,
+          quantity: qty
+        );
       }
     });
   }
@@ -281,9 +331,14 @@ class _CreateBillPageState extends State<CreateBillPage> {
                 itemCount: _searchResults.length,
                 itemBuilder: (context, index) {
                   final item = _searchResults[index];
+                  final totalStock = item.itemVariants.fold<int>(0, (sum, variant) => sum + variant.quantity);
+                  final priceRange = item.itemVariants.length == 1 
+                    ? '₹${item.itemVariants.first.price.toStringAsFixed(2)}'
+                    : '₹${item.itemVariants.map((v) => v.price).reduce((a, b) => a < b ? a : b).toStringAsFixed(2)} - ₹${item.itemVariants.map((v) => v.price).reduce((a, b) => a > b ? a : b).toStringAsFixed(2)}';
+                  
                   return ListTile(
                     title: Text(item.name),
-                    subtitle: Text('₹${item.price.toStringAsFixed(2)} • Stock: ${item.quantity}'),
+                    subtitle: Text('$priceRange • ${item.itemVariants.length} variant(s) • Total Stock: $totalStock'),
                     trailing: const Icon(Icons.add_circle_outline),
                     onTap: () => _addItemToBill(item),
                   );
@@ -302,37 +357,33 @@ class _CreateBillPageState extends State<CreateBillPage> {
                 itemCount: _billItems.length,
                 itemBuilder: (context, index) {
                   final bi = _billItems[index];
-                  final item = _billItemDetails[bi.itemId] ??
-                      _searchResults.firstWhere(
-                        (it) => it.id == bi.itemId,
-                        orElse: () => Item(
-                          id: bi.itemId,
-                          name: 'Item',
-                          description: '',
-                          category: '',
-                          price: 0,
-                          quantity: 0,
-                          inventoryId: '',
-                          archived: false,
-                          createdBy: '',
-                          createdAt: DateTime.now(),
-                          updatedAt: DateTime.now(),
-                        ),
-                      );
+                  final item = _billItemDetails[bi.itemId];
+                  final variantKey = '${bi.itemId}_${bi.itemVariantId}';
+                  final variant = _billItemVariants[variantKey];
+                  
+                  if (item == null || variant == null) {
+                    return const Card(
+                      child: ListTile(
+                        title: Text('Item not found'),
+                        subtitle: Text('Please refresh and try again'),
+                      ),
+                    );
+                  }
+                  
                   return Card(
                     child: ListTile(
                       title: Text(item.name),
-                      subtitle: Text('Qty: ${bi.quantity}'),
+                      subtitle: Text('${variant.name} • ₹${variant.price.toStringAsFixed(2)} • Qty: ${bi.quantity}'),
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           IconButton(
                             icon: const Icon(Icons.remove_circle_outline),
-                            onPressed: () => _updateItemQuantity(bi.itemId, -1),
+                            onPressed: () => _updateItemQuantity(bi.itemId, bi.itemVariantId, -1),
                           ),
                           IconButton(
                             icon: const Icon(Icons.add_circle_outline),
-                            onPressed: () => _updateItemQuantity(bi.itemId, 1),
+                            onPressed: () => _updateItemQuantity(bi.itemId, bi.itemVariantId, 1),
                           ),
                         ],
                       ),

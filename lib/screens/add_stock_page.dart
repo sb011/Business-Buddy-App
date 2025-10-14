@@ -19,7 +19,17 @@ class _AddStockPageState extends State<AddStockPage> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _qtyController = TextEditingController();
   final TextEditingController _reasonController = TextEditingController();
+  ItemVariant? _selectedVariant;
   bool _isSubmitting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-select the first variant if there's only one
+    if (widget.item.itemVariants.length == 1) {
+      _selectedVariant = widget.item.itemVariants.first;
+    }
+  }
 
   @override
   void dispose() {
@@ -30,6 +40,13 @@ class _AddStockPageState extends State<AddStockPage> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (_selectedVariant == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a variant')),
+      );
+      return;
+    }
 
     final String? token = await StorageService.getString(AppStrings.authToken);
     if (token == null) {
@@ -45,24 +62,41 @@ class _AddStockPageState extends State<AddStockPage> {
     try {
       final String reason = _reasonController.text.trim();
       final UpdateStockRequest request = UpdateStockRequest(
-        itemId: widget.item.id,
+        itemVariantId: _selectedVariant!.id,
         quantity: int.parse(_qtyController.text.trim()),
         reason: reason.isEmpty ? null : reason,
       );
 
-      await InventoryAPI.updateItemStock(
+      await InventoryAPI.updateItemVariantStock(
         token: token,
         updateStockRequest: request,
       );
+
+      // Update the variant quantity in the item
+      final updatedVariants = widget.item.itemVariants.map((variant) {
+        if (variant.id == _selectedVariant!.id) {
+          return ItemVariant(
+            id: variant.id,
+            itemId: variant.itemId,
+            name: variant.name,
+            price: variant.price,
+            quantity: variant.quantity + int.parse(_qtyController.text.trim()),
+            archived: variant.archived,
+            createdBy: variant.createdBy,
+            createdAt: variant.createdAt,
+            updatedAt: DateTime.now(),
+          );
+        }
+        return variant;
+      }).toList();
 
       final Item updated = Item(
         id: widget.item.id,
         name: widget.item.name,
         description: widget.item.description,
         category: widget.item.category,
-        price: widget.item.price,
-        quantity: widget.item.quantity + int.parse(_qtyController.text.trim()),
         inventoryId: widget.item.inventoryId,
+        itemVariants: updatedVariants,
         archived: widget.item.archived,
         createdBy: widget.item.createdBy,
         createdAt: widget.item.createdAt,
@@ -100,8 +134,57 @@ class _AddStockPageState extends State<AddStockPage> {
               const SizedBox(height: 4),
               Text('Item Name: ${widget.item.name}', style: const TextStyle(fontWeight: FontWeight.w600)),
               const SizedBox(height: 4),
-              Text('Current Item Stock: ${widget.item.quantity}', style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text('Total Variants: ${widget.item.itemVariants.length}', style: const TextStyle(fontWeight: FontWeight.w600)),
               const SizedBox(height: 16),
+              
+              // Variant selection
+              if (widget.item.itemVariants.length > 1) ...[
+                const Text('Select Variant:', style: TextStyle(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<ItemVariant>(
+                  value: _selectedVariant,
+                  decoration: const InputDecoration(labelText: 'Variant'),
+                  items: widget.item.itemVariants.map((variant) {
+                    return DropdownMenuItem<ItemVariant>(
+                      value: variant,
+                      child: Text('${variant.name} - ₹${variant.price.toStringAsFixed(2)} (Stock: ${variant.quantity})'),
+                    );
+                  }).toList(),
+                  onChanged: (ItemVariant? newValue) {
+                    setState(() {
+                      _selectedVariant = newValue;
+                    });
+                  },
+                  validator: (value) {
+                    if (value == null) return 'Please select a variant';
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+              ],
+              
+              // Current stock info
+              if (_selectedVariant != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Selected Variant: ${_selectedVariant!.name}', 
+                           style: const TextStyle(fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 4),
+                      Text('Current Stock: ${_selectedVariant!.quantity}'),
+                      Text('Price: ₹${_selectedVariant!.price.toStringAsFixed(2)}'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+              
               TextFormField(
                 controller: _qtyController,
                 decoration: const InputDecoration(labelText: 'Add Quantity'),

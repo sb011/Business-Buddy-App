@@ -8,6 +8,8 @@ import 'package:flutter/material.dart';
 import 'edit_item_page.dart';
 import 'add_stock_page.dart';
 import 'item_history_page.dart';
+import 'update_variant_page.dart';
+import 'add_variant_page.dart';
 
 class ItemDetailsPage extends StatefulWidget {
   final Item item;
@@ -187,7 +189,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
               } else if (value == 'history') {
                 await Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) => ItemHistoryPage(itemId: _currentItem.id),
+                    builder: (context) => ItemHistoryPage(item: _currentItem),
                   ),
                 );
               } else if (value == 'archive' && !widget.isArchived) {
@@ -221,13 +223,13 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
           ),
         ],
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Item Header
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 CircleAvatar(
                   radius: 28,
@@ -261,71 +263,177 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  '₹${_currentItem.price.toStringAsFixed(2)}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                    color: Colors.green,
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: 20),
+            
+            // Item Details Section
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Item Details',
+                      style: TextStyle(
+                        color: Colors.blue.shade800,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    
+                    // Description
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('Description: ', style: TextStyle(fontWeight: FontWeight.w500)),
+                        Expanded(child: Text(_currentItem.description)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    
+                    // Category and Variants Count
+                    Row(
+                      children: [
+                        const Text('Category: ', style: TextStyle(fontWeight: FontWeight.w500)),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade100,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            _currentItem.category,
+                            style: TextStyle(color: Colors.blue.shade800, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        const Text('Variants: ', style: TextStyle(fontWeight: FontWeight.w500)),
+                        Text('${_currentItem.itemVariants.length}'),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 20),
+            
+            // Variants section
             Text(
-              'Description',
+              'Item Variants',
               style: TextStyle(
                 color: Colors.blue.shade800,
                 fontWeight: FontWeight.w600,
+                fontSize: 16,
               ),
             ),
-            const SizedBox(height: 6),
-            Text(_currentItem.description),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    _currentItem.category,
-                    style: TextStyle(color: Colors.blue.shade800, fontWeight: FontWeight.w600),
-                  ),
+            const SizedBox(height: 8),
+            
+            if (_currentItem.itemVariants.isEmpty)
+              const Card(
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: Text('No variants available', style: TextStyle(color: Colors.grey)),
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  'Qty: ${_currentItem.quantity}',
-                  style: const TextStyle(color: Colors.grey),
+              )
+            else
+              ..._currentItem.itemVariants.map((variant) {
+                return Card(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundColor: variant.archived ? Colors.red.shade100 : Colors.green.shade100,
+                      child: Icon(
+                        variant.archived ? Icons.archive : Icons.inventory,
+                        color: variant.archived ? Colors.red.shade700 : Colors.green.shade700,
+                      ),
+                    ),
+                    title: Text(variant.name),
+                    subtitle: Text('₹${variant.price.toStringAsFixed(2)} • Stock: ${variant.quantity}'),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (variant.archived)
+                          const Chip(label: Text('Archived'), backgroundColor: Colors.red),
+                        const SizedBox(width: 8),
+                        if (!widget.isArchived && !variant.archived)
+                          IconButton(
+                            icon: const Icon(Icons.edit, color: Colors.orange),
+                            onPressed: () async {
+                              final updated = await Navigator.of(context).push<Item>(
+                                MaterialPageRoute(
+                                  builder: (context) => UpdateVariantPage(
+                                    item: _currentItem,
+                                    variant: variant,
+                                  ),
+                                ),
+                              );
+                              if (updated is Item) {
+                                if (!mounted) return;
+                                setState(() {
+                                  _currentItem = updated;
+                                });
+                              }
+                            },
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+              
+              // Add Variant Button
+              if (!widget.isArchived) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      final updated = await Navigator.of(context).push<Item>(
+                        MaterialPageRoute(
+                          builder: (context) => AddVariantPage(item: _currentItem),
+                        ),
+                      );
+                      if (updated is Item) {
+                        if (!mounted) return;
+                        setState(() {
+                          _currentItem = updated;
+                        });
+                      }
+                    },
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add Variant'),
+                  ),
                 ),
               ],
-            ),
-            if (!widget.isArchived) ...[
-              const Spacer(),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  onPressed: () async {
-                    final updated = await Navigator.of(context).push<Item>(
-                      MaterialPageRoute(
-                        builder: (context) => AddStockPage(item: _currentItem),
-                      ),
-                    );
-                    if (updated is Item) {
-                      if (!mounted) return;
-                      setState(() {
-                        _currentItem = updated;
-                      });
-                    }
-                  },
-                  icon: const Icon(Icons.add_chart),
-                  label: const Text('Add Stock'),
+              
+              // Add Stock Button
+              if (!widget.isArchived) ...[
+                const SizedBox(height: 20),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () async {
+                      final updated = await Navigator.of(context).push<Item>(
+                        MaterialPageRoute(
+                          builder: (context) => AddStockPage(item: _currentItem),
+                        ),
+                      );
+                      if (updated is Item) {
+                        if (!mounted) return;
+                        setState(() {
+                          _currentItem = updated;
+                        });
+                      }
+                    },
+                    icon: const Icon(Icons.add_chart),
+                    label: const Text('Add Stock'),
+                  ),
                 ),
-              ),
-            ],
+              ],
           ],
         ),
       ),

@@ -20,7 +20,7 @@ class InventoryAPI {
     final Map<String, String> qp = {
       'limit': limit.toString(),
       'skip': skip.toString(),
-      'archive': archive.toString()
+      'archive': archive.toString(),
     };
     if (query != null && query.trim().isNotEmpty) {
       qp['q'] = query.trim();
@@ -118,7 +118,7 @@ class InventoryAPI {
     }
   }
 
-  static Future<void> updateItemStock({
+  static Future<void> updateItemVariantStock({
     required String token,
     required UpdateStockRequest updateStockRequest,
   }) async {
@@ -137,8 +137,7 @@ class InventoryAPI {
       try {
         final Map<String, dynamic> resp = json.decode(response.body);
         final message =
-            resp['errorMessage']?.toString() ??
-            'Failed to update item stock';
+            resp['errorMessage']?.toString() ?? 'Failed to update item stock';
         throw Exception(message);
       } catch (_) {
         throw Exception(
@@ -148,9 +147,9 @@ class InventoryAPI {
     }
   }
 
-  static Future<List<ItemHistoryResponse>> getItemHistory({
+  static Future<List<ItemHistoryResponse>> getItemVariantHistory({
     required String token,
-    required String itemId,
+    required String itemVariantId,
     required int limit,
     required int skip,
   }) async {
@@ -159,7 +158,7 @@ class InventoryAPI {
       'skip': skip.toString(),
     };
     final uri = Uri.parse(
-      '$_baseUrl/${ApiEndpoints.itemHistory(itemId)}',
+      '$_baseUrl/${ApiEndpoints.itemVariantHistory(itemVariantId)}',
     ).replace(queryParameters: qp);
 
     final response = await http.get(
@@ -190,10 +189,11 @@ class InventoryAPI {
     }
   }
 
-  static Future<void> archiveItem({required String token, required ItemArchiveRequest itemArchiveRequest}) async {
-    final uri = Uri.parse(
-      '$_baseUrl/${ApiEndpoints.archiveItem}',
-    );
+  static Future<void> archiveItem({
+    required String token,
+    required ItemArchiveRequest itemArchiveRequest,
+  }) async {
+    final uri = Uri.parse('$_baseUrl/${ApiEndpoints.archiveItem}');
 
     final response = await http.post(
       uri,
@@ -201,19 +201,79 @@ class InventoryAPI {
         'Content-Type': 'application/json; charset=UTF-8',
         'Authorization': 'Bearer $token',
       },
-      body: jsonEncode(itemArchiveRequest.toJson())
+      body: jsonEncode(itemArchiveRequest.toJson()),
     );
 
     if (response.statusCode != 200 && response.statusCode != 201) {
       try {
         final Map<String, dynamic> resp = json.decode(response.body);
         final message =
-            resp['errorMessage']?.toString() ??
-                'Failed to archive item';
+            resp['errorMessage']?.toString() ?? 'Failed to archive item';
         throw Exception(message);
       } catch (_) {
         throw Exception(
           'Failed to archive item. Status: ${response.statusCode}',
+        );
+      }
+    }
+  }
+
+  static Future<ItemVariant> addItemVariant({
+    required String token,
+    required AddItemVariant addItemVariant,
+  }) async {
+    final uri = Uri.parse('$_baseUrl/${ApiEndpoints.addItemVariant}');
+
+    final response = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(addItemVariant.toJson()),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      try {
+        final Map<String, dynamic> resp = json.decode(response.body);
+        final message =
+            resp['errorMessage']?.toString() ?? 'Failed to adding item variant';
+        throw Exception(message);
+      } catch (_) {
+        throw Exception(
+          'Failed to adding item variant. Status: ${response.statusCode}',
+        );
+      }
+    } else {
+      final Map<String, dynamic> data = json.decode(response.body);
+      return ItemVariant.fromJson(data);
+    }
+  }
+
+  static Future<void> updateItemVariant({
+    required String token,
+    required UpdateItemVariant updateItemVariant,
+  }) async {
+    final uri = Uri.parse('$_baseUrl/${ApiEndpoints.updateItemVariant}');
+
+    final response = await http.put(
+      uri,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(updateItemVariant.toJson()),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      try {
+        final Map<String, dynamic> resp = json.decode(response.body);
+        final message =
+            resp['errorMessage']?.toString() ?? 'Failed to adding item variant';
+        throw Exception(message);
+      } catch (_) {
+        throw Exception(
+          'Failed to adding item variant. Status: ${response.statusCode}',
         );
       }
     }

@@ -347,7 +347,7 @@ class _ArchivedItemsPageState extends State<ArchivedItemsPage> {
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    'Qty: ${item.quantity}',
+                                    'Variants: ${item.itemVariants.length}',
                                     style: const TextStyle(
                                       fontSize: 12,
                                       color: Colors.grey,
@@ -362,7 +362,9 @@ class _ArchivedItemsPageState extends State<ArchivedItemsPage> {
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
-                                '₹${item.price.toStringAsFixed(2)}',
+                                item.itemVariants.length == 1 
+                                  ? '₹${item.itemVariants.first.price.toStringAsFixed(2)}'
+                                  : '₹${item.itemVariants.map((v) => v.price).reduce((a, b) => a < b ? a : b).toStringAsFixed(2)}-${item.itemVariants.map((v) => v.price).reduce((a, b) => a > b ? a : b).toStringAsFixed(2)}',
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,

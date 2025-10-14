@@ -20,7 +20,6 @@ class _EditItemPageState extends State<EditItemPage> {
   late final TextEditingController _nameController;
   late final TextEditingController _descriptionController;
   late final TextEditingController _categoryController;
-  late final TextEditingController _priceController;
 
   bool _isSubmitting = false;
 
@@ -30,7 +29,6 @@ class _EditItemPageState extends State<EditItemPage> {
     _nameController = TextEditingController(text: widget.item.name);
     _descriptionController = TextEditingController(text: widget.item.description);
     _categoryController = TextEditingController(text: widget.item.category);
-    _priceController = TextEditingController(text: widget.item.price.toStringAsFixed(2));
   }
 
   @override
@@ -38,7 +36,6 @@ class _EditItemPageState extends State<EditItemPage> {
     _nameController.dispose();
     _descriptionController.dispose();
     _categoryController.dispose();
-    _priceController.dispose();
     super.dispose();
   }
 
@@ -62,7 +59,6 @@ class _EditItemPageState extends State<EditItemPage> {
         name: _nameController.text.trim(),
         description: _descriptionController.text.trim(),
         category: _categoryController.text.trim(),
-        price: double.parse(_priceController.text.trim()),
       );
 
       await InventoryAPI.updateItem(
@@ -75,9 +71,8 @@ class _EditItemPageState extends State<EditItemPage> {
         name: request.name,
         description: request.description,
         category: request.category,
-        price: request.price,
-        quantity: widget.item.quantity,
         inventoryId: widget.item.inventoryId,
+        itemVariants: widget.item.itemVariants, // Keep existing variants
         archived: widget.item.archived,
         createdBy: widget.item.createdBy,
         createdAt: widget.item.createdAt,
@@ -129,19 +124,6 @@ class _EditItemPageState extends State<EditItemPage> {
                 controller: _categoryController,
                 decoration: const InputDecoration(labelText: 'Category'),
                 validator: (value) => (value == null || value.trim().isEmpty) ? 'Enter category' : null,
-                textInputAction: TextInputAction.next,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _priceController,
-                decoration: const InputDecoration(labelText: 'Price'),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) return 'Enter price';
-                  final parsed = double.tryParse(value.trim());
-                  if (parsed == null || parsed < 0) return 'Enter valid price';
-                  return null;
-                },
                 textInputAction: TextInputAction.done,
                 onFieldSubmitted: (_) => _submit(),
               ),

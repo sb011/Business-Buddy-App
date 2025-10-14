@@ -37,6 +37,7 @@ class Customer {
 class BillItem {
   final String id;
   final String itemId;
+  final String itemVariantId;
   final String billId;
   final int quantity;
   final double pricePerUnit;
@@ -46,6 +47,7 @@ class BillItem {
   BillItem({
     required this.id,
     required this.itemId,
+    required this.itemVariantId,
     required this.billId,
     required this.quantity,
     required this.pricePerUnit,
@@ -57,6 +59,7 @@ class BillItem {
     return BillItem(
       id: json['id'] as String,
       itemId: json['item_id'] as String,
+      itemVariantId: json['item_variant_id'] as String,
       billId: json['bill_id'] as String,
       quantity: json['quantity'] as int,
       pricePerUnit: (json['price_per_unit'] as num).toDouble(),
@@ -69,6 +72,7 @@ class BillItem {
     return {
       'id': id,
       'item_id': itemId,
+      'item_variant_id': itemVariantId,
       'bill_id': billId,
       'quantity': quantity,
       'price_per_unit': pricePerUnit,
