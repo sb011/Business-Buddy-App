@@ -278,4 +278,66 @@ class InventoryAPI {
       }
     }
   }
+
+  static Future<void> archiveItemVariant({
+    required String token,
+    required ItemVariantArchiveRequest itemVariantArchiveRequest,
+  }) async {
+    final uri = Uri.parse('$_baseUrl/${ApiEndpoints.archiveItemVariant}');
+
+    final response = await http.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(itemVariantArchiveRequest.toJson()),
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      try {
+        final Map<String, dynamic> resp = json.decode(response.body);
+        final message =
+            resp['errorMessage']?.toString() ?? 'Failed to archive item';
+        throw Exception(message);
+      } catch (_) {
+        throw Exception(
+          'Failed to archive item. Status: ${response.statusCode}',
+        );
+      }
+    }
+  }
+
+  static Future<List<ItemVariant>> getArchivedItemVariants({
+    required String token,
+  }) async {
+    final Map<String, String> qp = {
+      'archive': 'true',
+    };
+    final uri = Uri.parse('$_baseUrl/${ApiEndpoints.getItemVariants}').replace(queryParameters: qp);
+
+    final response = await http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json; charset=UTF-8',
+        'Authorization': 'Bearer $token',
+      }
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      try {
+        final Map<String, dynamic> resp = json.decode(response.body);
+        final message =
+            resp['errorMessage']?.toString() ?? 'Failed to fetch archived variants';
+        throw Exception(message);
+      } catch (_) {
+        throw Exception(
+          'Failed to fetch archived variants. Status: ${response.statusCode}',
+        );
+      }
+    } else {
+      final List<dynamic> variantsJson = json.decode(response.body);
+      return variantsJson.map((json) => ItemVariant.fromJson(json)).toList();
+    }
+  }
 }

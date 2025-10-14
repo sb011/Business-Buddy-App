@@ -22,5 +22,7 @@ class ApiEndpoints {
   static const String removeUserFromInventory = "api/v1/inventory/user";
   static const String addItemVariant = "api/v1/inventory/item/variant";
   static const String updateItemVariant = "api/v1/inventory/item/variant";
+  static const String archiveItemVariant = "api/v1/inventory/item/variant/archive";
+  static const String getItemVariants = "api/v1/inventory/item/variants";
   static const String imageUpload = "api/v1/upload/image";
 }

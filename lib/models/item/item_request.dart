@@ -187,3 +187,24 @@ class ItemArchiveRequest {
     return map;
   }
 }
+
+class ItemVariantArchiveRequest {
+  final String itemId;
+  final String itemVariantId;
+  final bool isArchive;
+
+  ItemVariantArchiveRequest({required this.itemId, required this.itemVariantId, required this.isArchive});
+
+  factory ItemVariantArchiveRequest.fromJson(Map<String, dynamic> json) {
+    return ItemVariantArchiveRequest(
+      itemId: json['item_id'] as String,
+      itemVariantId: json['item_variant_id'] as String,
+      isArchive: json['is_archive'] as bool,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    final map = {'item_id': itemId, 'item_variant_id': itemVariantId, 'is_archive': isArchive};
+    return map;
+  }
+}

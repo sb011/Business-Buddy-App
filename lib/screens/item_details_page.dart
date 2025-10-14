@@ -171,6 +171,79 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     }
   }
 
+  Future<void> _archiveVariant(ItemVariant variant) async {
+    final bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Archive Variant?'),
+          content: const Text(
+              'Are you sure you want to archive this variant? This will set the stock to 0 for the variant.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Confirm'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final String? token = await StorageService.getString(AppStrings.authToken);
+      if (token == null) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Authentication token not found. Please login again.')),
+        );
+        return;
+      }
+
+      final request = ItemVariantArchiveRequest(
+        itemId: _currentItem.id,
+        itemVariantId: variant.id,
+        isArchive: true,
+      );
+      await InventoryAPI.archiveItemVariant(token: token, itemVariantArchiveRequest: request);
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Variant archived successfully')),
+      );
+
+      // Update local state immediately without additional API calls
+      setState(() {
+        // Remove the archived variant from the list completely
+        final updatedVariants = _currentItem.itemVariants.where((v) => v.id != variant.id).toList();
+        
+        _currentItem = Item(
+          id: _currentItem.id,
+          name: _currentItem.name,
+          description: _currentItem.description,
+          category: _currentItem.category,
+          inventoryId: _currentItem.inventoryId,
+          itemVariants: updatedVariants,
+          archived: _currentItem.archived,
+          createdBy: _currentItem.createdBy,
+          createdAt: _currentItem.createdAt,
+          updatedAt: _currentItem.updatedAt,
+        );
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to archive variant: $e')),
+      );
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -311,7 +384,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                         ),
                         const SizedBox(width: 16),
                         const Text('Variants: ', style: TextStyle(fontWeight: FontWeight.w500)),
-                        Text('${_currentItem.itemVariants.length}'),
+                        Text('${_currentItem.itemVariants.where((v) => !v.archived).length}'),
                       ],
                     ),
                   ],
@@ -332,7 +405,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
             ),
             const SizedBox(height: 8),
             
-            if (_currentItem.itemVariants.isEmpty)
+            if (_currentItem.itemVariants.where((v) => !v.archived).isEmpty)
               const Card(
                 child: Padding(
                   padding: EdgeInsets.all(16),
@@ -340,15 +413,15 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                 ),
               )
             else
-              ..._currentItem.itemVariants.map((variant) {
+              ..._currentItem.itemVariants.where((v) => !v.archived).map((variant) {
                 return Card(
                   margin: const EdgeInsets.only(bottom: 8),
                   child: ListTile(
                     leading: CircleAvatar(
-                      backgroundColor: variant.archived ? Colors.red.shade100 : Colors.green.shade100,
+                      backgroundColor: Colors.green.shade100,
                       child: Icon(
-                        variant.archived ? Icons.archive : Icons.inventory,
-                        color: variant.archived ? Colors.red.shade700 : Colors.green.shade700,
+                        Icons.inventory,
+                        color: Colors.green.shade700,
                       ),
                     ),
                     title: Text(variant.name),
@@ -356,10 +429,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (variant.archived)
-                          const Chip(label: Text('Archived'), backgroundColor: Colors.red),
-                        const SizedBox(width: 8),
-                        if (!widget.isArchived && !variant.archived)
+                        if (!widget.isArchived) ...[
                           IconButton(
                             icon: const Icon(Icons.edit, color: Colors.orange),
                             onPressed: () async {
@@ -379,6 +449,11 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                               }
                             },
                           ),
+                          IconButton(
+                            icon: const Icon(Icons.archive, color: Colors.red),
+                            onPressed: () => _archiveVariant(variant),
+                          ),
+                        ],
                       ],
                     ),
                   ),
