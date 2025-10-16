@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../api_calls/expense_apis.dart';
 import '../constants/strings.dart';
+import '../constants/permissions.dart';
 import '../models/expense/expense.dart';
 import '../models/expense/expense_request.dart';
 import '../utils/shared_preferences.dart';
+import '../widgets/permission_wrapper.dart';
 
 class CreateExpensePage extends StatefulWidget {
   const CreateExpensePage({super.key});
@@ -69,13 +71,15 @@ class _CreateExpensePageState extends State<CreateExpensePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create Expense'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-      ),
-      body: Padding(
+    return PermissionWrapper(
+      permission: AppPermissions.addExpense,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Create Expense'),
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+        ),
+        body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -139,6 +143,7 @@ class _CreateExpensePageState extends State<CreateExpensePage> {
           ),
         ),
       ),
+    ),
     );
   }
 }

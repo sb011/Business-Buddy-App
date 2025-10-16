@@ -70,6 +70,7 @@ class _OTPPageState extends State<OTPPage> {
         AppStrings.inventoryId,
         result.inventory.id,
       );
+      await StorageService.setString(AppStrings.role, result.user.role);
 
       final user = result.user;
       final firstName = user.firstName;

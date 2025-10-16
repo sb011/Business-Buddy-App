@@ -1,10 +1,11 @@
 import 'package:business_buddy_app/api_calls/inventory_apis.dart';
+import 'package:business_buddy_app/constants/constants.dart';
 import 'package:business_buddy_app/models/item/item.dart';
 import 'package:business_buddy_app/models/item/item_request.dart';
 import 'package:flutter/material.dart';
 
-import '../constants/strings.dart';
 import '../utils/shared_preferences.dart';
+import '../widgets/permission_wrapper.dart';
 
 class AddStockPage extends StatefulWidget {
   final Item item;
@@ -25,6 +26,7 @@ class _AddStockPageState extends State<AddStockPage> {
   @override
   void initState() {
     super.initState();
+    
     // Auto-select the first variant if there's only one
     if (widget.item.itemVariants.length == 1) {
       _selectedVariant = widget.item.itemVariants.first;
@@ -117,13 +119,15 @@ class _AddStockPageState extends State<AddStockPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add Stock'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-      ),
-      body: Padding(
+    return PermissionWrapper(
+      permission: AppPermissions.updateStock,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Add Stock'),
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+        ),
+        body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -224,6 +228,7 @@ class _AddStockPageState extends State<AddStockPage> {
           ),
         ),
       ),
+    ),
     );
   }
 }

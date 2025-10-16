@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 
 import '../api_calls/expense_apis.dart';
 import '../constants/strings.dart';
+import '../constants/permissions.dart';
 import '../models/expense/expense.dart';
 import '../utils/shared_preferences.dart';
+import '../widgets/permission_wrapper.dart';
 import 'create_expense_page.dart';
 import 'expense_details_page.dart';
 
@@ -146,8 +148,10 @@ class _ExpensePageState extends State<ExpensePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      floatingActionButton: FloatingActionButton(
+    return PermissionWrapper(
+      permission: AppPermissions.getExpense,
+      child: Scaffold(
+        floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final created = await Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => const CreateExpensePage()),
@@ -371,6 +375,7 @@ class _ExpensePageState extends State<ExpensePage> {
           ),
         ],
       ),
+    ),
     );
   }
 }

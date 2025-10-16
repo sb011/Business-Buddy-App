@@ -3,6 +3,8 @@ import 'package:business_buddy_app/api_calls/inventory_apis.dart';
 import 'package:business_buddy_app/models/item/item_request.dart';
 import 'package:business_buddy_app/utils/shared_preferences.dart';
 import 'package:business_buddy_app/constants/strings.dart';
+import 'package:business_buddy_app/constants/permissions.dart';
+import 'package:business_buddy_app/widgets/permission_wrapper.dart';
 import 'package:flutter/material.dart';
 
 class ArchivedVariantsPage extends StatefulWidget {
@@ -123,12 +125,14 @@ class _ArchivedVariantsPageState extends State<ArchivedVariantsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Archived Variants'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        actions: [
+    return PermissionWrapper(
+      permission: AppPermissions.getItemVariant,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Archived Variants'),
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+          actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: _loadArchivedVariants,
@@ -208,6 +212,7 @@ class _ArchivedVariantsPageState extends State<ArchivedVariantsPage> {
                     },
                   ),
                 ),
+    ),
     );
   }
 }

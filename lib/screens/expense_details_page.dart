@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 
 import '../api_calls/expense_apis.dart';
 import '../constants/strings.dart';
+import '../constants/permissions.dart';
 import '../models/expense/expense.dart';
 import '../models/expense/expense_request.dart';
 import '../utils/shared_preferences.dart';
+import '../widgets/permission_wrapper.dart';
 import 'edit_expense_page.dart';
 
 class ExpenseDetailsPage extends StatefulWidget {
@@ -143,13 +145,15 @@ class _ExpenseDetailsPageState extends State<ExpenseDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: BackButton(onPressed: () => Navigator.of(context).pop(_current)),
-        title: const Text('Expense Details'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-        actions: [
+    return PermissionWrapper(
+      permission: AppPermissions.getExpense,
+      child: Scaffold(
+        appBar: AppBar(
+          leading: BackButton(onPressed: () => Navigator.of(context).pop(_current)),
+          title: const Text('Expense Details'),
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+          actions: [
           PopupMenuButton<String>(
             onSelected: (value) async {
               if (value == 'edit') {
@@ -239,6 +243,7 @@ class _ExpenseDetailsPageState extends State<ExpenseDetailsPage> {
           ],
         ),
       ),
+    ),
     );
   }
 }

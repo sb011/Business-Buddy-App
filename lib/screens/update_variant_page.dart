@@ -4,7 +4,9 @@ import 'package:business_buddy_app/models/item/item_request.dart';
 import 'package:flutter/material.dart';
 
 import '../constants/strings.dart';
+import '../constants/permissions.dart';
 import '../utils/shared_preferences.dart';
+import '../widgets/permission_wrapper.dart';
 
 class UpdateVariantPage extends StatefulWidget {
   final Item item;
@@ -108,13 +110,15 @@ class _UpdateVariantPageState extends State<UpdateVariantPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Update Variant'),
-        backgroundColor: Colors.orange,
-        foregroundColor: Colors.white,
-      ),
-      body: Padding(
+    return PermissionWrapper(
+      permission: AppPermissions.updateItemVariant,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Update Variant'),
+          backgroundColor: Colors.orange,
+          foregroundColor: Colors.white,
+        ),
+        body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -184,6 +188,7 @@ class _UpdateVariantPageState extends State<UpdateVariantPage> {
           ),
         ),
       ),
+    ),
     );
   }
 }

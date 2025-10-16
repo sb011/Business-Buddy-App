@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/bill/bill_response.dart';
+import '../constants/permissions.dart';
+import '../widgets/permission_wrapper.dart';
 
 class BillDetailsPage extends StatelessWidget {
   final BillResponse bill;
@@ -8,13 +10,15 @@ class BillDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Bill Details'),
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
-      ),
-      body: ListView(
+    return PermissionWrapper(
+      permission: AppPermissions.getBill,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Bill Details'),
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+        ),
+        body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
           _HeaderCard(bill: bill),
@@ -24,6 +28,7 @@ class BillDetailsPage extends StatelessWidget {
           _SummarySection(bill: bill),
         ],
       ),
+    ),
     );
   }
 }

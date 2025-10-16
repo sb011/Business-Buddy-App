@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 
 import '../api_calls/expense_apis.dart';
 import '../constants/strings.dart';
+import '../constants/permissions.dart';
 import '../models/expense/expense.dart';
 import '../utils/shared_preferences.dart';
+import '../widgets/permission_wrapper.dart';
 import 'expense_details_page.dart';
 
 class ArchivedExpensesPage extends StatefulWidget {
@@ -147,8 +149,10 @@ class _ArchivedExpensesPageState extends State<ArchivedExpensesPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
+    return PermissionWrapper(
+      permission: AppPermissions.getExpense,
+      child: Scaffold(
+        body: Column(
         children: [
           // Header with Search Bar
           Container(
@@ -361,6 +365,7 @@ class _ArchivedExpensesPageState extends State<ArchivedExpensesPage> {
           ),
         ],
       ),
+    ),
     );
   }
 }

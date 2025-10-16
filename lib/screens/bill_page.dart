@@ -2,8 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../api_calls/bill_apis.dart';
 import '../constants/strings.dart';
+import '../constants/permissions.dart';
 import '../models/bill/bill_response.dart';
 import '../utils/shared_preferences.dart';
+import '../widgets/permission_wrapper.dart';
 import 'create_bill_page.dart';
 import 'bill_details_page.dart';
 
@@ -156,27 +158,29 @@ class _BillPageState extends State<BillPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Bills'),
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final created = await Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const CreateBillPage()),
-          );
-          if (created is BillResponse) {
-            if (!mounted) return;
-            setState(() {
-              bills = [created, ...bills];
-            });
-          }
-        },
-        backgroundColor: Colors.green,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+    return PermissionWrapper(
+      permission: AppPermissions.getBill,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Bills'),
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () async {
+            final created = await Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const CreateBillPage()),
+            );
+            if (created is BillResponse) {
+              if (!mounted) return;
+              setState(() {
+                bills = [created, ...bills];
+              });
+            }
+          },
+          backgroundColor: Colors.green,
+          child: const Icon(Icons.add, color: Colors.white),
+        ),
       body: Column(
         children: [
           // Search Bar
@@ -308,6 +312,7 @@ class _BillPageState extends State<BillPage> {
           ),
         ],
       ),
+    ),
     );
   }
 }

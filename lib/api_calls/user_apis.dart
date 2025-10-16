@@ -27,8 +27,8 @@ class UserAPI {
         final Map<String, dynamic> resp = json.decode(response.body);
         final message = resp['errorMessage']?.toString() ?? 'Failed to update details';
         throw Exception(message);
-      } catch (_) {
-        throw Exception('Failed to update details. Status: ${response.statusCode}');
+      } catch (message) {
+        throw Exception('Failed to update details $message. Status: ${response.statusCode}');
       }
     }
   }

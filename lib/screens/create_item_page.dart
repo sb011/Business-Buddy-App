@@ -4,7 +4,9 @@ import 'package:business_buddy_app/models/item/item.dart';
 import 'package:flutter/material.dart';
 
 import '../constants/strings.dart';
+import '../constants/permissions.dart';
 import '../utils/shared_preferences.dart';
+import '../widgets/permission_wrapper.dart';
 
 class CreateItemPage extends StatefulWidget {
   const CreateItemPage({super.key});
@@ -129,13 +131,15 @@ class _CreateItemPageState extends State<CreateItemPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create Item'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-      ),
-      body: Padding(
+    return PermissionWrapper(
+      permission: AppPermissions.createItem,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Create Item'),
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+        ),
+        body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
           key: _formKey,
@@ -259,6 +263,7 @@ class _CreateItemPageState extends State<CreateItemPage> {
           ),
         ),
       ),
+    ),
     );
   }
 }

@@ -4,6 +4,7 @@ class User {
   final String? firstName;
   final String? lastName;
   final String? email;
+  final String role;
   final String? profilePicture;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -14,6 +15,7 @@ class User {
     this.firstName,
     this.lastName,
     this.email,
+    required this.role,
     this.profilePicture,
     required this.createdAt,
     required this.updatedAt,
@@ -26,6 +28,7 @@ class User {
       firstName: json['first_name'] as String?,
       lastName: json['last_name'] as String?,
       email: json['email'] as String?,
+      role: json['role'] as String,
       profilePicture: json['profile_picture'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
@@ -39,6 +42,7 @@ class User {
       'first_name': firstName,
       'last_name': lastName,
       'email': email,
+      'role': role,
       'profile_picture': profilePicture,
       'created_at': createdAt,
       'updated_at': updatedAt,

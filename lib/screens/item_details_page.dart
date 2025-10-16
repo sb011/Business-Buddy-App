@@ -3,6 +3,8 @@ import 'package:business_buddy_app/api_calls/inventory_apis.dart';
 import 'package:business_buddy_app/models/item/item_request.dart';
 import 'package:business_buddy_app/utils/shared_preferences.dart';
 import 'package:business_buddy_app/constants/strings.dart';
+import 'package:business_buddy_app/constants/permissions.dart';
+import 'package:business_buddy_app/widgets/permission_wrapper.dart';
 import 'package:flutter/material.dart';
 
 import 'edit_item_page.dart';
@@ -246,14 +248,16 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: BackButton(
-          onPressed: () => Navigator.of(context).pop(_currentItem),
-        ),
-        title: const Text('Item Details'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
+    return PermissionWrapper(
+      permission: AppPermissions.getInventoryItem,
+      child: Scaffold(
+        appBar: AppBar(
+          leading: BackButton(
+            onPressed: () => Navigator.of(context).pop(_currentItem),
+          ),
+          title: const Text('Item Details'),
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) async {
@@ -512,6 +516,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
           ],
         ),
       ),
+    ),
     );
   }
 }

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import '../api_calls/bill_apis.dart';
 import '../api_calls/inventory_apis.dart';
 import '../constants/strings.dart';
+import '../constants/permissions.dart';
 import '../models/bill/bill_request.dart';
 import '../models/bill/bill_response.dart';
 import '../models/item/item.dart';
 import '../utils/shared_preferences.dart';
+import '../widgets/permission_wrapper.dart';
 
 class CreateBillPage extends StatefulWidget {
   const CreateBillPage({super.key});
@@ -248,12 +250,14 @@ class _CreateBillPageState extends State<CreateBillPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Create Bill'),
-        backgroundColor: Colors.green,
-        foregroundColor: Colors.white,
-        actions: [
+    return PermissionWrapper(
+      permission: AppPermissions.createBill,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Create Bill'),
+          backgroundColor: Colors.green,
+          foregroundColor: Colors.white,
+          actions: [
           TextButton(
             onPressed: _isSubmitting ? null : _submit,
             child: _isSubmitting
@@ -417,6 +421,7 @@ class _CreateBillPageState extends State<CreateBillPage> {
           ),
         ),
       ),
+    ),
     );
   }
 }

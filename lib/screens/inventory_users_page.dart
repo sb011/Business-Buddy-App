@@ -3,6 +3,8 @@ import '../api_calls/auth_apis.dart';
 import '../models/auth/auth_response.dart';
 import '../utils/shared_preferences.dart';
 import '../constants/strings.dart';
+import '../constants/permissions.dart';
+import '../widgets/permission_wrapper.dart';
 import 'add_users_to_inventory_page.dart';
 
 class InventoryUsersPage extends StatefulWidget {
@@ -106,13 +108,15 @@ class _InventoryUsersPageState extends State<InventoryUsersPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Inventory Users'),
-        backgroundColor: Colors.purple,
-        foregroundColor: Colors.white,
-      ),
-      body: Column(
+    return PermissionWrapper(
+      permission: AppPermissions.getInventoryUsers,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Inventory Users'),
+          backgroundColor: Colors.purple,
+          foregroundColor: Colors.white,
+        ),
+        body: Column(
         children: [
           if (isLoading)
             const Expanded(
@@ -239,6 +243,7 @@ class _InventoryUsersPageState extends State<InventoryUsersPage> {
         backgroundColor: Colors.purple,
         child: const Icon(Icons.add, color: Colors.white),
       ),
+    ),
     );
   }
 }

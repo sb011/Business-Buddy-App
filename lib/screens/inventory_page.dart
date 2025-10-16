@@ -5,7 +5,9 @@ import 'package:business_buddy_app/screens/auth_page.dart';
 import 'package:flutter/material.dart';
 
 import '../constants/strings.dart';
+import '../constants/permissions.dart';
 import '../utils/shared_preferences.dart';
+import '../widgets/permission_wrapper.dart';
 import 'create_item_page.dart';
 import 'item_details_page.dart';
 
@@ -164,8 +166,10 @@ class _InventoryPageState extends State<InventoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      floatingActionButton: FloatingActionButton(
+    return PermissionWrapper(
+      permission: AppPermissions.getInventoryItem,
+      child: Scaffold(
+        floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final createdItem = await Navigator.of(context).push(
             MaterialPageRoute(builder: (context) => const CreateItemPage()),
@@ -394,6 +398,7 @@ class _InventoryPageState extends State<InventoryPage> {
           ),
         ],
       ),
+    ),
     );
   }
 }

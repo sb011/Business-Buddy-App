@@ -4,7 +4,9 @@ import 'package:business_buddy_app/models/item/item.dart';
 import 'package:flutter/material.dart';
 
 import '../constants/strings.dart';
+import '../constants/permissions.dart';
 import '../utils/shared_preferences.dart';
+import '../widgets/permission_wrapper.dart';
 
 class ItemHistoryPage extends StatefulWidget {
   final Item item;
@@ -86,13 +88,15 @@ class _ItemHistoryPageState extends State<ItemHistoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('${widget.item.name} - History'),
-        backgroundColor: Colors.blue,
-        foregroundColor: Colors.white,
-      ),
-      body: Column(
+    return PermissionWrapper(
+      permission: AppPermissions.getItemVariantHistory,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('${widget.item.name} - History'),
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+        ),
+        body: Column(
         children: [
           // Variant selection
           if (widget.item.itemVariants.length > 1) ...[
@@ -220,6 +224,7 @@ class _ItemHistoryPageState extends State<ItemHistoryPage> {
           ),
         ],
       ),
+    ),
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:business_buddy_app/screens/auth_page.dart';
 import 'package:flutter/material.dart';
 
 import '../constants/strings.dart';
+import '../constants/permissions.dart';
 import '../utils/shared_preferences.dart';
 import 'archived_items_page.dart';
 import 'archived_expenses_page.dart';
@@ -16,6 +17,23 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
+  String? _userRole;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _getUserRole();
+  }
+
+  Future<void> _getUserRole() async {
+    final role = await StorageService.getString(AppStrings.role);
+    setState(() {
+      _userRole = role;
+      _isLoading = false;
+    });
+  }
+
   Future<void> _logout(BuildContext context) async {
     await StorageService.remove(AppStrings.authToken);
 
@@ -30,6 +48,14 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
@@ -60,54 +86,84 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
           ),
           const SizedBox(height: 40),
-          ElevatedButton.icon(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const ArchivedItemsPage(),
+          
+          // Archive Items Button - All roles can access
+          if (_userRole != null && AppPermissions.hasPermission(_userRole!, AppPermissions.archiveItem))
+            Column(
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const ArchivedItemsPage(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.inventory_2_outlined),
+                  label: const Text('Archive Items'),
                 ),
-              );
-            },
-            icon: const Icon(Icons.inventory_2_outlined),
-            label: const Text('Archive Items'),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const ArchivedExpensesPage(),
+                const SizedBox(height: 12),
+              ],
+            ),
+          
+          // Archive Expenses Button - Only Owner and Manager
+          if (_userRole != null && AppPermissions.hasPermission(_userRole!, AppPermissions.getExpense))
+            Column(
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const ArchivedExpensesPage(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.receipt_long_outlined),
+                  label: const Text('Archive Expenses'),
                 ),
-              );
-            },
-            icon: const Icon(Icons.receipt_long_outlined),
-            label: const Text('Archive Expenses'),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const ArchivedVariantsPage(),
+                const SizedBox(height: 12),
+              ],
+            ),
+          
+          // Archive Variants Button - Owner, Manager, Inventory Handler
+          if (_userRole != null && AppPermissions.hasPermission(_userRole!, AppPermissions.getItemVariant))
+            Column(
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const ArchivedVariantsPage(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.inventory_outlined),
+                  label: const Text('Archive Variants'),
                 ),
-              );
-            },
-            icon: const Icon(Icons.inventory_outlined),
-            label: const Text('Archive Variants'),
-          ),
-          const SizedBox(height: 12),
-          ElevatedButton.icon(
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => const InventoryUsersPage(),
+                const SizedBox(height: 12),
+              ],
+            ),
+          
+          // Inventory Users Button - Only Owner
+          if (_userRole != null && AppPermissions.hasPermission(_userRole!, AppPermissions.getInventoryUsers))
+            Column(
+              children: [
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const InventoryUsersPage(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.people_outlined),
+                  label: const Text('Inventory Users'),
                 ),
-              );
-            },
-            icon: const Icon(Icons.people_outlined),
-            label: const Text('Inventory Users'),
-          ),
-          const SizedBox(height: 12),
+                const SizedBox(height: 12),
+              ],
+            ),
+          
+          // Logout Button - Always visible
           OutlinedButton.icon(
             onPressed: () => _logout(context),
             icon: const Icon(Icons.logout),
