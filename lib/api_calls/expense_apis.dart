@@ -5,9 +5,10 @@ import 'package:http/http.dart' as http;
 import '../constants/api.dart';
 import '../models/expense/expense.dart';
 import '../models/expense/expense_request.dart';
+import 'api_helper.dart';
 
 class ExpenseAPI {
-  static const String _baseUrl = 'http://${ApiEndpoints.baseUrl}';
+  static const String _baseUrl = ApiEndpoints.baseUrl;
 
   static Future<Expense> createExpense({
     required String token,
@@ -24,17 +25,9 @@ class ExpenseAPI {
       body: jsonEncode(createExpenseRequest.toJson()),
     );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      try {
-        final Map<String, dynamic> resp = json.decode(response.body);
-        final message =
-            resp['errorMessage']?.toString() ?? 'Failed to create expense';
-        throw Exception(message);
-      } catch (_) {
-        throw Exception(
-          'Failed to create expense. Status: ${response.statusCode}',
-        );
-      }
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to create expense.');
+    if (!isValid) {
+      throw Exception('Failed to create expense.');
     } else {
       final Map<String, dynamic> data = json.decode(response.body);
       return Expense.fromJson(data);
@@ -69,17 +62,9 @@ class ExpenseAPI {
       },
     );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      try {
-        final Map<String, dynamic> resp = json.decode(response.body);
-        final message =
-            resp['errorMessage']?.toString() ?? 'Failed to get expense';
-        throw Exception(message);
-      } catch (_) {
-        throw Exception(
-          'Failed to get expense. Status: ${response.statusCode}',
-        );
-      }
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to get expense.');
+    if (!isValid) {
+      throw Exception('Failed to get expense.');
     } else {
       final List<dynamic> expensesJson = json.decode(response.body);
       return expensesJson.map((json) => Expense.fromJson(json)).toList();
@@ -101,17 +86,9 @@ class ExpenseAPI {
       body: jsonEncode(updateExpenseRequest.toJson()),
     );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      try {
-        final Map<String, dynamic> resp = json.decode(response.body);
-        final message =
-            resp['errorMessage']?.toString() ?? 'Failed to update expense';
-        throw Exception(message);
-      } catch (_) {
-        throw Exception(
-          'Failed to update expense. Status: ${response.statusCode}',
-        );
-      }
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to update expense.');
+    if (!isValid) {
+      throw Exception('Failed to update expense.');
     }
   }
 
@@ -130,17 +107,9 @@ class ExpenseAPI {
       body: jsonEncode(archiveExpenseRequest.toJson()),
     );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      try {
-        final Map<String, dynamic> resp = json.decode(response.body);
-        final message =
-            resp['errorMessage']?.toString() ?? 'Failed to archive expense';
-        throw Exception(message);
-      } catch (_) {
-        throw Exception(
-          'Failed to  archive expense. Status: ${response.statusCode}',
-        );
-      }
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to archive expense.');
+    if (!isValid) {
+      throw Exception('Failed to archive expense.');
     }
   }
 }

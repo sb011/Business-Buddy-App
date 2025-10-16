@@ -1,4 +1,6 @@
 import 'dart:convert';
+
+import 'package:business_buddy_app/api_calls/api_helper.dart';
 import 'package:business_buddy_app/models/auth/auth_request.dart';
 import 'package:http/http.dart' as http;
 
@@ -6,7 +8,7 @@ import '../constants/api.dart';
 import '../models/auth/auth_response.dart';
 
 class AuthAPI {
-  static const String _baseUrl = 'http://${ApiEndpoints.baseUrl}';
+  static const String _baseUrl = ApiEndpoints.baseUrl;
 
   static Future<void> register({required RegisterRequest registerRequest}) async {
     final uri = Uri.parse('$_baseUrl/${ApiEndpoints.register}');
@@ -16,15 +18,9 @@ class AuthAPI {
       body: jsonEncode(registerRequest.toJson()),
     );
 
-    if (response.statusCode != 200) {
-      try {
-        final Map<String, dynamic> resp = json.decode(response.body);
-        final message =
-            resp['errorMessage']?.toString() ?? 'Failed to Register.';
-        throw Exception(message);
-      } catch (_) {
-        throw Exception('Failed to register. Status: ${response.statusCode}');
-      }
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to register.');
+    if (!isValid) {
+      return;
     }
   }
 
@@ -36,14 +32,9 @@ class AuthAPI {
       body: jsonEncode(loginRequest.toJson()),
     );
 
-    if (response.statusCode != 200) {
-      try {
-        final Map<String, dynamic> resp = json.decode(response.body);
-        final message = resp['errorMessage']?.toString() ?? 'Failed to login.';
-        throw Exception(message);
-      } catch (_) {
-        throw Exception('Failed to login. Status: ${response.statusCode}');
-      }
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to login.');
+    if (!isValid) {
+      return;
     }
   }
 
@@ -53,20 +44,14 @@ class AuthAPI {
       uri,
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode(otpRequest.toJson()),
-    );
+    ).timeout(const Duration(seconds: 15));
 
-    if (response.statusCode == 200) {
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to login.');
+    if (!isValid) {
+      throw Exception('Failed to login.');
+    } else {
       final Map<String, dynamic> data = json.decode(response.body);
       return ValidateOtpResponse.fromJson(data);
-    }
-
-    try {
-      final Map<String, dynamic> resp = json.decode(response.body);
-      final message =
-          resp['errorMessage']?.toString() ?? 'Failed to validate OTP';
-      throw Exception(message);
-    } catch (_) {
-      throw Exception('Failed to validate OTP. Status: ${response.statusCode}');
     }
   }
 
@@ -84,15 +69,9 @@ class AuthAPI {
       },
     );
 
-    if (response.statusCode != 200) {
-      try {
-        final Map<String, dynamic> resp = json.decode(response.body);
-        final message =
-            resp['errorMessage']?.toString() ?? 'Failed to get inventory users.';
-        throw Exception(message);
-      } catch (_) {
-        throw Exception('Failed to get inventory users. Status: ${response.statusCode}');
-      }
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to get inventory users.');
+    if (!isValid) {
+      throw Exception('Failed to get inventory users.');
     } else {
       final List<dynamic> expensesJson = json.decode(response.body);
       return expensesJson.map((json) => UserWithRole.fromJson(json)).toList();
@@ -115,15 +94,9 @@ class AuthAPI {
       body: jsonEncode(addUsersToInventoryRequest.toJson())
     );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      try {
-        final Map<String, dynamic> resp = json.decode(response.body);
-        final message =
-            resp['errorMessage']?.toString() ?? 'Failed to add users into inventory.';
-        throw Exception(message);
-      } catch (_) {
-        throw Exception('Failed to add users into inventory. Status: ${response.statusCode}');
-      }
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to add users into inventory.');
+    if (!isValid) {
+      throw Exception('Failed to add users into inventory.');
     }
   }
 
@@ -146,15 +119,9 @@ class AuthAPI {
         },
     );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      try {
-        final Map<String, dynamic> resp = json.decode(response.body);
-        final message =
-            resp['errorMessage']?.toString() ?? 'Failed to remove user from inventory.';
-        throw Exception(message);
-      } catch (_) {
-        throw Exception('Failed to remove user from inventory. Status: ${response.statusCode}');
-      }
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to remove user from inventory.');
+    if (!isValid) {
+      throw Exception('Failed to remove user from inventory.');
     }
   }
 }

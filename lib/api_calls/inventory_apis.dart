@@ -6,9 +6,10 @@ import 'package:business_buddy_app/models/item/item_response.dart';
 import 'package:http/http.dart' as http;
 
 import '../constants/api.dart';
+import 'api_helper.dart';
 
 class InventoryAPI {
-  static const String _baseUrl = 'http://${ApiEndpoints.baseUrl}';
+  static const String _baseUrl = ApiEndpoints.baseUrl;
 
   static Future<List<Item>> getInventoryItems({
     required String token,
@@ -37,18 +38,9 @@ class InventoryAPI {
       },
     );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      try {
-        final Map<String, dynamic> resp = json.decode(response.body);
-        final message =
-            resp['errorMessage']?.toString() ??
-            'Failed to fetch inventory items';
-        throw Exception(message);
-      } catch (_) {
-        throw Exception(
-          'Failed to fetch inventory items. Status: ${response.statusCode}',
-        );
-      }
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to get inventory items.');
+    if (!isValid) {
+      throw Exception('Failed to get inventory items.');
     } else {
       final List<dynamic> itemsJson = json.decode(response.body);
       return itemsJson.map((json) => Item.fromJson(json)).toList();
@@ -70,18 +62,9 @@ class InventoryAPI {
       body: jsonEncode(createItemRequest.toJson()),
     );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      try {
-        final Map<String, dynamic> resp = json.decode(response.body);
-        final message =
-            resp['errorMessage']?.toString() ??
-            'Failed to create inventory items';
-        throw Exception(message);
-      } catch (_) {
-        throw Exception(
-          'Failed to create inventory items. Status: ${response.statusCode}',
-        );
-      }
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to create inventory items.');
+    if (!isValid) {
+      throw Exception('Failed to create inventory items.');
     } else {
       final Map<String, dynamic> data = json.decode(response.body);
       return Item.fromJson(data);
@@ -103,18 +86,9 @@ class InventoryAPI {
       body: jsonEncode(updateItemRequest.toJson()),
     );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      try {
-        final Map<String, dynamic> resp = json.decode(response.body);
-        final message =
-            resp['errorMessage']?.toString() ??
-            'Failed to update inventory items';
-        throw Exception(message);
-      } catch (_) {
-        throw Exception(
-          'Failed to update inventory items. Status: ${response.statusCode}',
-        );
-      }
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to update inventory items.');
+    if (!isValid) {
+      throw Exception('Failed to update inventory items.');
     }
   }
 
@@ -133,17 +107,9 @@ class InventoryAPI {
       body: jsonEncode(updateStockRequest.toJson()),
     );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      try {
-        final Map<String, dynamic> resp = json.decode(response.body);
-        final message =
-            resp['errorMessage']?.toString() ?? 'Failed to update item stock';
-        throw Exception(message);
-      } catch (_) {
-        throw Exception(
-          'Failed to update item stock. Status: ${response.statusCode}',
-        );
-      }
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to update item stock.');
+    if (!isValid) {
+      throw Exception('Failed to update item stock.');
     }
   }
 
@@ -169,18 +135,9 @@ class InventoryAPI {
       },
     );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      try {
-        final Map<String, dynamic> resp = json.decode(response.body);
-        final message =
-            resp['errorMessage']?.toString() ??
-            'Failed to fetch inventory items';
-        throw Exception(message);
-      } catch (_) {
-        throw Exception(
-          'Failed to fetch item history. Status: ${response.statusCode}',
-        );
-      }
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to get item variant history.');
+    if (!isValid) {
+      throw Exception('Failed to get item variant history.');
     } else {
       final List<dynamic> itemsJson = json.decode(response.body);
       return itemsJson
@@ -204,17 +161,9 @@ class InventoryAPI {
       body: jsonEncode(itemArchiveRequest.toJson()),
     );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      try {
-        final Map<String, dynamic> resp = json.decode(response.body);
-        final message =
-            resp['errorMessage']?.toString() ?? 'Failed to archive item';
-        throw Exception(message);
-      } catch (_) {
-        throw Exception(
-          'Failed to archive item. Status: ${response.statusCode}',
-        );
-      }
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to archive item.');
+    if (!isValid) {
+      throw Exception('Failed to archive item.');
     }
   }
 
@@ -233,17 +182,9 @@ class InventoryAPI {
       body: jsonEncode(addItemVariant.toJson()),
     );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      try {
-        final Map<String, dynamic> resp = json.decode(response.body);
-        final message =
-            resp['errorMessage']?.toString() ?? 'Failed to adding item variant';
-        throw Exception(message);
-      } catch (_) {
-        throw Exception(
-          'Failed to adding item variant. Status: ${response.statusCode}',
-        );
-      }
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to add item variant.');
+    if (!isValid) {
+      throw Exception('Failed to add item variant.');
     } else {
       final Map<String, dynamic> data = json.decode(response.body);
       return ItemVariant.fromJson(data);
@@ -265,17 +206,9 @@ class InventoryAPI {
       body: jsonEncode(updateItemVariant.toJson()),
     );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      try {
-        final Map<String, dynamic> resp = json.decode(response.body);
-        final message =
-            resp['errorMessage']?.toString() ?? 'Failed to adding item variant';
-        throw Exception(message);
-      } catch (_) {
-        throw Exception(
-          'Failed to adding item variant. Status: ${response.statusCode}',
-        );
-      }
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to update item variant.');
+    if (!isValid) {
+      throw Exception('Failed to update item variant.');
     }
   }
 
@@ -294,17 +227,9 @@ class InventoryAPI {
       body: jsonEncode(itemVariantArchiveRequest.toJson()),
     );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      try {
-        final Map<String, dynamic> resp = json.decode(response.body);
-        final message =
-            resp['errorMessage']?.toString() ?? 'Failed to archive item';
-        throw Exception(message);
-      } catch (_) {
-        throw Exception(
-          'Failed to archive item. Status: ${response.statusCode}',
-        );
-      }
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to archive item variant.');
+    if (!isValid) {
+      throw Exception('Failed to archive item variant.');
     }
   }
 
@@ -324,17 +249,9 @@ class InventoryAPI {
       }
     );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      try {
-        final Map<String, dynamic> resp = json.decode(response.body);
-        final message =
-            resp['errorMessage']?.toString() ?? 'Failed to fetch archived variants';
-        throw Exception(message);
-      } catch (_) {
-        throw Exception(
-          'Failed to fetch archived variants. Status: ${response.statusCode}',
-        );
-      }
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to get archived items.');
+    if (!isValid) {
+      throw Exception('Failed to get archived items.');
     } else {
       final List<dynamic> variantsJson = json.decode(response.body);
       return variantsJson.map((json) => ItemVariant.fromJson(json)).toList();

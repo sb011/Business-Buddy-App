@@ -1,5 +1,5 @@
 class ApiEndpoints {
-  static const String baseUrl = "10.0.2.2:8080";
+  static const String baseUrl = "http://10.0.2.2:8080";
   static const String register = "api/v1/register";
   static const String login = "api/v1/login";
   static const String validateOtp = "api/v1/validate/otp";

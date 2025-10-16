@@ -6,9 +6,10 @@ import 'package:business_buddy_app/models/bill/bill_response.dart';
 import 'package:http/http.dart' as http;
 
 import '../constants/api.dart';
+import 'api_helper.dart';
 
 class AuthAPI {
-  static const String _baseUrl = 'http://${ApiEndpoints.baseUrl}';
+  static const String _baseUrl = ApiEndpoints.baseUrl;
 
   static Future<List<BillResponse>> getBills({
     required String token,
@@ -36,15 +37,9 @@ class AuthAPI {
       },
     );
 
-    if (response.statusCode != 200) {
-      try {
-        final Map<String, dynamic> resp = json.decode(response.body);
-        final message =
-            resp['errorMessage']?.toString() ?? 'Failed to get bills.';
-        throw Exception(message);
-      } catch (_) {
-        throw Exception('Failed to get bills. Status: ${response.statusCode}');
-      }
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to get bills.');
+    if (!isValid) {
+      throw Exception('Failed to get bills.');
     } else {
       final List<dynamic> billJson = json.decode(response.body);
       return billJson.map((json) => BillResponse.fromJson(json)).toList();
@@ -67,15 +62,9 @@ class AuthAPI {
       body: jsonEncode(createBillRequest.toJson()),
     );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      try {
-        final Map<String, dynamic> resp = json.decode(response.body);
-        final message =
-            resp['errorMessage']?.toString() ?? 'Failed to get bills.';
-        throw Exception(message);
-      } catch (_) {
-        throw Exception('Failed to get bills. Status: ${response.statusCode}');
-      }
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to create bill.');
+    if (!isValid) {
+      throw Exception('Failed to create bill.');
     } else {
       final Map<String, dynamic> data = json.decode(response.body);
       return BillResponse.fromJson(data);
@@ -101,15 +90,9 @@ class AuthAPI {
       },
     );
 
-    if (response.statusCode != 200) {
-      try {
-        final Map<String, dynamic> resp = json.decode(response.body);
-        final message =
-            resp['errorMessage']?.toString() ?? 'Failed to get customers.';
-        throw Exception(message);
-      } catch (_) {
-        throw Exception('Failed to get customers. Status: ${response.statusCode}');
-      }
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to get customer details.');
+    if (!isValid) {
+      throw Exception('Failed to get customer details.');
     } else {
       final List<dynamic> expensesJson = json.decode(response.body);
       return expensesJson.map((json) => Customer.fromJson(json)).toList();
