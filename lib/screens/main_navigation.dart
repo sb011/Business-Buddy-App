@@ -4,6 +4,7 @@ import 'bill_page.dart';
 import 'expense_page.dart';
 import 'profile_page.dart';
 import 'auth_page.dart';
+import '../constants/colors.dart';
 import '../constants/permissions.dart';
 import '../constants/strings.dart';
 import '../utils/shared_preferences.dart';
@@ -69,8 +70,8 @@ class _MainNavigationState extends State<MainNavigation> {
     if (AppPermissions.hasPermission(role, AppPermissions.getExpense)) {
       pages.add(const ExpensePage());
       items.add(const BottomNavigationBarItem(
-        icon: Icon(Icons.money_off_outlined),
-        activeIcon: Icon(Icons.money_off),
+        icon: Icon(Icons.monetization_on_outlined),
+        activeIcon: Icon(Icons.monetization_on),
         label: 'Expense',
       ));
       if (_currentIndex == 2) currentIndex = pages.length - 1;
@@ -95,24 +96,50 @@ class _MainNavigationState extends State<MainNavigation> {
   @override
   Widget build(BuildContext context) {
     if (_pages.isEmpty) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: const Center(
+          child: CircularProgressIndicator(
+            color: AppColors.textDarkPrimary,
+          ),
         ),
       );
     }
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: _pages[_currentIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: _navigationItems,
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: AppColors.textSecondary.withOpacity(0.2),
+              width: 1,
+            ),
+          ),
+        ),
+        child: BottomNavigationBar(
+          type: BottomNavigationBarType.fixed,
+          currentIndex: _currentIndex,
+          backgroundColor: AppColors.background,
+          selectedItemColor: AppColors.textDarkPrimary,
+          unselectedItemColor: AppColors.textSecondary,
+          selectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontWeight: FontWeight.w400,
+            fontSize: 12,
+          ),
+          elevation: 10,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          items: _navigationItems,
+        ),
       ),
     );
   }
