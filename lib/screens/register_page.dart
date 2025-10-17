@@ -7,6 +7,8 @@ import '../constants/colors.dart';
 import '../constants/style.dart';
 import '../constants/strings.dart';
 import '../utils/shared_preferences.dart';
+import '../widgets/custom_button.dart';
+import '../widgets/custom_text_field.dart';
 import 'main_navigation.dart';
 import 'otp_page.dart';
 
@@ -30,7 +32,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus();
+    StorageService.checkLoginStatus();
   }
 
   @override
@@ -43,18 +45,6 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  Future<void> _checkLoginStatus() async {
-    final String? token = await StorageService.getString(AppStrings.authToken);
-
-    if (token != null && token.isNotEmpty) {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const MainNavigation()),
-        );
-      }
-    }
-  }
-
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -63,7 +53,6 @@ class _RegisterPageState extends State<RegisterPage> {
         ? ""
         : _emailController.text.trim();
 
-    // TODO: profile picture
     final userRegisterRequest = UserRegisterRequest(
       firstName: _firstNameController.text.trim(),
       lastName: _lastNameController.text.trim(),
@@ -98,9 +87,6 @@ class _RegisterPageState extends State<RegisterPage> {
       );
     } on Exception catch (e) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
@@ -144,45 +130,10 @@ class _RegisterPageState extends State<RegisterPage> {
                     child: Column(
                       children: [
                         // Inventory Name Field
-                        TextFormField(
+                        CustomTextField(
                           controller: _inventoryNameController,
-                          decoration: const InputDecoration(
-                            prefixIcon: Icon(Icons.business),
-                            hintText: 'Enter Inventory Name',
-                            hintStyle: TextStyle(color: AppColors.textSecondary),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(Style.radius),
-                              ),
-                              borderSide: BorderSide(
-                                color: AppColors.textSecondary,
-                                width: 1.5,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(Style.radius),
-                              ),
-                              borderSide: BorderSide(
-                                color: AppColors.textDarkPrimary,
-                                width: 2,
-                              ),
-                            ),
-                            errorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(Style.radius),
-                              ),
-                              borderSide: BorderSide(color: AppColors.danger, width: 2),
-                            ),
-                            focusedErrorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(Style.radius),
-                              ),
-                              borderSide: BorderSide(color: AppColors.danger, width: 2),
-                            ),
-                            filled: true,
-                            fillColor: AppColors.background,
-                          ),
+                          hintText: 'Enter Inventory Name',
+                          prefixIcon: Icons.business,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
                               return 'Please enter inventory name';
@@ -193,45 +144,10 @@ class _RegisterPageState extends State<RegisterPage> {
                         const SizedBox(height: 20),
                         
                         // First Name Field
-                        TextFormField(
+                        CustomTextField(
                           controller: _firstNameController,
-                          decoration: const InputDecoration(
-                            prefixIcon: Icon(Icons.person),
-                            hintText: 'Enter First Name',
-                            hintStyle: TextStyle(color: AppColors.textSecondary),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(Style.radius),
-                              ),
-                              borderSide: BorderSide(
-                                color: AppColors.textSecondary,
-                                width: 1.5,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(Style.radius),
-                              ),
-                              borderSide: BorderSide(
-                                color: AppColors.textDarkPrimary,
-                                width: 2,
-                              ),
-                            ),
-                            errorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(Style.radius),
-                              ),
-                              borderSide: BorderSide(color: AppColors.danger, width: 2),
-                            ),
-                            focusedErrorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(Style.radius),
-                              ),
-                              borderSide: BorderSide(color: AppColors.danger, width: 2),
-                            ),
-                            filled: true,
-                            fillColor: AppColors.background,
-                          ),
+                          hintText: 'Enter First Name',
+                          prefixIcon: Icons.person,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
                               return 'Please enter first name';
@@ -242,45 +158,10 @@ class _RegisterPageState extends State<RegisterPage> {
                         const SizedBox(height: 20),
                         
                         // Last Name Field
-                        TextFormField(
+                        CustomTextField(
                           controller: _lastNameController,
-                          decoration: const InputDecoration(
-                            prefixIcon: Icon(Icons.person_outline),
-                            hintText: 'Enter Last Name',
-                            hintStyle: TextStyle(color: AppColors.textSecondary),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(Style.radius),
-                              ),
-                              borderSide: BorderSide(
-                                color: AppColors.textSecondary,
-                                width: 1.5,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(Style.radius),
-                              ),
-                              borderSide: BorderSide(
-                                color: AppColors.textDarkPrimary,
-                                width: 2,
-                              ),
-                            ),
-                            errorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(Style.radius),
-                              ),
-                              borderSide: BorderSide(color: AppColors.danger, width: 2),
-                            ),
-                            focusedErrorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(Style.radius),
-                              ),
-                              borderSide: BorderSide(color: AppColors.danger, width: 2),
-                            ),
-                            filled: true,
-                            fillColor: AppColors.background,
-                          ),
+                          hintText: 'Enter Last Name',
+                          prefixIcon: Icons.person_outline,
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
                               return 'Please enter last name';
@@ -291,78 +172,20 @@ class _RegisterPageState extends State<RegisterPage> {
                         const SizedBox(height: 20),
                         
                         // Email Field
-                        TextFormField(
+                        CustomTextField(
                           controller: _emailController,
+                          hintText: 'Enter Email (Optional)',
+                          prefixIcon: Icons.email,
                           keyboardType: TextInputType.emailAddress,
-                          decoration: const InputDecoration(
-                            prefixIcon: Icon(Icons.email),
-                            hintText: 'Enter Email (Optional)',
-                            hintStyle: TextStyle(color: AppColors.textSecondary),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(Style.radius),
-                              ),
-                              borderSide: BorderSide(
-                                color: AppColors.textSecondary,
-                                width: 1.5,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(Style.radius),
-                              ),
-                              borderSide: BorderSide(
-                                color: AppColors.textDarkPrimary,
-                                width: 2,
-                              ),
-                            ),
-                            filled: true,
-                            fillColor: AppColors.background,
-                          ),
                         ),
                         const SizedBox(height: 20),
                         
                         // Mobile Number Field
-                        TextFormField(
+                        CustomTextField(
                           controller: _mobileNumberController,
+                          hintText: 'Enter Mobile Number',
+                          prefixIcon: Icons.phone,
                           keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                            prefixIcon: Icon(Icons.phone),
-                            hintText: 'Enter Mobile Number',
-                            hintStyle: TextStyle(color: AppColors.textSecondary),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(Style.radius),
-                              ),
-                              borderSide: BorderSide(
-                                color: AppColors.textSecondary,
-                                width: 1.5,
-                              ),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(Style.radius),
-                              ),
-                              borderSide: BorderSide(
-                                color: AppColors.textDarkPrimary,
-                                width: 2,
-                              ),
-                            ),
-                            errorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(Style.radius),
-                              ),
-                              borderSide: BorderSide(color: AppColors.danger, width: 2),
-                            ),
-                            focusedErrorBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(Style.radius),
-                              ),
-                              borderSide: BorderSide(color: AppColors.danger, width: 2),
-                            ),
-                            filled: true,
-                            fillColor: AppColors.background,
-                          ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
                               return 'Please enter mobile number';
@@ -381,34 +204,11 @@ class _RegisterPageState extends State<RegisterPage> {
                 const SizedBox(height: 20),
                 
                 // Register Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _submitForm,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.textDarkPrimary,
-                      foregroundColor: AppColors.textLightPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(Style.radius),
-                      ),
-                      elevation: 4,
-                      shadowColor: AppColors.textSecondary,
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text(
-                            "Register",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                  ),
+                CustomButtons.primary(
+                  text: "Register",
+                  onPressed: _isLoading ? null : _submitForm,
+                  isLoading: _isLoading,
+                  loadingText: "Creating account...",
                 ),
                 const SizedBox(height: 20),
               ],

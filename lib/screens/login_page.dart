@@ -5,6 +5,8 @@ import '../api_calls/auth_apis.dart';
 import '../constants/colors.dart';
 import '../constants/style.dart';
 import '../utils/shared_preferences.dart';
+import '../widgets/custom_button.dart';
+import '../widgets/custom_text_field.dart';
 import 'otp_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -91,46 +93,11 @@ class _LoginPageState extends State<LoginPage> {
                 const SizedBox(height: 40),
 
                 // Phone Number Field
-                TextFormField(
+                CustomTextField(
                   controller: _phoneController,
+                  hintText: 'Enter Mobile Number',
+                  prefixIcon: Icons.phone,
                   keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    prefixIcon: Icon(Icons.phone),
-                    hintText: 'Enter Mobile Number',
-                    hintStyle: TextStyle(color: AppColors.textSecondary),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(Style.radius),
-                      ),
-                      borderSide: BorderSide(
-                        color: AppColors.textSecondary,
-                        width: 1.5,
-                      ),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(Style.radius),
-                      ),
-                      borderSide: BorderSide(
-                        color: AppColors.textDarkPrimary,
-                        width: 2,
-                      ),
-                    ),
-                    errorBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(Style.radius),
-                      ),
-                      borderSide: BorderSide(color: AppColors.danger, width: 2),
-                    ),
-                    focusedErrorBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.all(
-                        Radius.circular(Style.radius),
-                      ),
-                      borderSide: BorderSide(color: AppColors.danger, width: 2),
-                    ),
-                    filled: true,
-                    fillColor: AppColors.background,
-                  ),
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
                       return 'Please enter mobile number';
@@ -145,34 +112,11 @@ class _LoginPageState extends State<LoginPage> {
                 const Spacer(),
 
                 // Login Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _submitPhoneNumber,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.textDarkPrimary,
-                      foregroundColor: AppColors.textLightPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(Style.radius),
-                      ),
-                      elevation: 4,
-                      shadowColor: AppColors.textSecondary,
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text(
-                            "Login",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                  ),
+                CustomButtons.primary(
+                  text: "Login",
+                  onPressed: _isLoading ? null : _submitPhoneNumber,
+                  isLoading: _isLoading,
+                  loadingText: "Logging in...",
                 ),
                 const SizedBox(height: 20),
               ],

@@ -3,6 +3,7 @@ class ApiEndpoints {
   static const String register = "api/v1/register";
   static const String login = "api/v1/login";
   static const String validateOtp = "api/v1/validate/otp";
+  static const String resendOtp = "api/v1/resend/otp";
   static const String userUpdate = "api/v1/user";
   static const String inventoryItems = "api/v1/inventory/items";
   static const String createItem = "api/v1/inventory/item";

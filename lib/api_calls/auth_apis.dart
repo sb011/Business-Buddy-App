@@ -59,6 +59,24 @@ class AuthAPI {
     }
   }
 
+  static Future<void> resendOtp({
+    required BuildContext context,
+    required LoginRequest loginRequest,
+  }) async {
+    final uri = Uri.parse('$_baseUrl/${ApiEndpoints.resendOtp}');
+    final response = await http.post(
+      uri,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(loginRequest.toJson()),
+    );
+
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to resend otp.', context);
+    if (!isValid) {
+      throw Exception('Failed to resend otp.');
+    }
+  }
+
+
   static Future<List<UserWithRole>> getInventoryUsers({
     required BuildContext context,
     required String token,
