@@ -53,6 +53,7 @@ class _CreateExpensePageState extends State<CreateExpensePage> {
       );
 
       final Expense created = await ExpenseAPI.createExpense(
+        context: context,
         token: token,
         createExpenseRequest: request,
       );

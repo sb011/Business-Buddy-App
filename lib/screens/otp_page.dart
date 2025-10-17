@@ -59,6 +59,7 @@ class _OTPPageState extends State<OTPPage> {
 
     try {
       final ValidateOtpResponse result = await AuthAPI.validateOtp(
+        context: context,
         otpRequest: otpRequest,
       ).timeout(const Duration(seconds: 10));
 

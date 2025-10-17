@@ -56,6 +56,7 @@ class _AddVariantPageState extends State<AddVariantPage> {
       );
 
       final ItemVariant newVariant = await InventoryAPI.addItemVariant(
+        context: context,
         token: token,
         addItemVariant: request,
       );

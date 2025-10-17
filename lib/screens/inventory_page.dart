@@ -84,6 +84,7 @@ class _InventoryPageState extends State<InventoryPage> {
       });
 
       final response = await InventoryAPI.getInventoryItems(
+        context: context,
         token: token,
         limit: limit,
         skip: skip,
@@ -123,6 +124,7 @@ class _InventoryPageState extends State<InventoryPage> {
 
       skip += limit;
       final response = await InventoryAPI.getInventoryItems(
+        context: context,
         token: token,
         limit: limit,
         skip: skip,

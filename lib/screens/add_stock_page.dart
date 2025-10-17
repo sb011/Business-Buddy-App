@@ -68,8 +68,9 @@ class _AddStockPageState extends State<AddStockPage> {
         quantity: int.parse(_qtyController.text.trim()),
         reason: reason.isEmpty ? null : reason,
       );
-
+      
       await InventoryAPI.updateItemVariantStock(
+        context: context,
         token: token,
         updateStockRequest: request,
       );

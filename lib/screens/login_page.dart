@@ -2,9 +2,9 @@ import 'package:business_buddy_app/models/auth/auth_request.dart';
 import 'package:flutter/material.dart';
 
 import '../api_calls/auth_apis.dart';
-import '../constants/strings.dart';
+import '../constants/colors.dart';
+import '../constants/style.dart';
 import '../utils/shared_preferences.dart';
-import 'main_navigation.dart';
 import 'otp_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -22,25 +22,13 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus();
+    StorageService.checkLoginStatus();
   }
 
   @override
   void dispose() {
     _phoneController.dispose();
     super.dispose();
-  }
-
-  Future<void> _checkLoginStatus() async {
-    final String? token = await StorageService.getString(AppStrings.authToken);
-
-    if (token != null && token.isNotEmpty) {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const MainNavigation()),
-        );
-      }
-    }
   }
 
   Future<void> _submitPhoneNumber() async {
@@ -54,6 +42,7 @@ class _LoginPageState extends State<LoginPage> {
     try {
       await AuthAPI.login(
         loginRequest: loginRequest,
+        context: context,
       ).timeout(const Duration(seconds: 10));
       setState(() => _isLoading = false);
 
@@ -62,48 +51,132 @@ class _LoginPageState extends State<LoginPage> {
         context,
         MaterialPageRoute(builder: (context) => OTPPage(phoneNumber: phone)),
       );
-    } on Exception catch (e) {
+    } on Exception catch (_) {
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error: $e')));
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              TextFormField(
-                controller: _phoneController,
-                decoration: const InputDecoration(
-                  labelText: "Enter Mobile Number",
-                  border: OutlineInputBorder(),
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+      ),
+      backgroundColor: AppColors.background,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Header
+                const Text(
+                  'Welcome Back',
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDarkPrimary,
+                  ),
                 ),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) {
-                    return 'Please enter mobile number';
-                  }
-                  if (value.length != 10) {
-                    return 'Mobile number should have 10 digits';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
-              _isLoading
-                  ? const CircularProgressIndicator()
-                  : ElevatedButton(
-                      onPressed: _submitPhoneNumber,
-                      child: const Text('Submit'),
+                const SizedBox(height: 8),
+                const Text(
+                  'Enter your mobile number to continue',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                const SizedBox(height: 40),
+
+                // Phone Number Field
+                TextFormField(
+                  controller: _phoneController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    prefixIcon: Icon(Icons.phone),
+                    hintText: 'Enter Mobile Number',
+                    hintStyle: TextStyle(color: AppColors.textSecondary),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(Style.radius),
+                      ),
+                      borderSide: BorderSide(
+                        color: AppColors.textSecondary,
+                        width: 1.5,
+                      ),
                     ),
-            ],
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(Style.radius),
+                      ),
+                      borderSide: BorderSide(
+                        color: AppColors.textDarkPrimary,
+                        width: 2,
+                      ),
+                    ),
+                    errorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(Style.radius),
+                      ),
+                      borderSide: BorderSide(color: AppColors.danger, width: 2),
+                    ),
+                    focusedErrorBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(Style.radius),
+                      ),
+                      borderSide: BorderSide(color: AppColors.danger, width: 2),
+                    ),
+                    filled: true,
+                    fillColor: AppColors.background,
+                  ),
+                  validator: (value) {
+                    if (value == null || value.trim().isEmpty) {
+                      return 'Please enter mobile number';
+                    }
+                    if (value.length != 10) {
+                      return 'Mobile number should have 10 digits';
+                    }
+                    return null;
+                  },
+                ),
+
+                const Spacer(),
+
+                // Login Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _submitPhoneNumber,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.textDarkPrimary,
+                      foregroundColor: AppColors.textLightPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(Style.radius),
+                      ),
+                      elevation: 4,
+                      shadowColor: AppColors.textSecondary,
+                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text(
+                            "Login",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
       ),

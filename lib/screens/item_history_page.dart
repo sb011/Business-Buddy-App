@@ -56,6 +56,7 @@ class _ItemHistoryPageState extends State<ItemHistoryPage> {
       }
 
       final items = await InventoryAPI.getItemVariantHistory(
+        context: context,
         token: token,
         itemVariantId: _selectedVariant!.id,
         limit: limit,

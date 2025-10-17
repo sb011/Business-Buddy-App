@@ -74,6 +74,7 @@ class _ArchivedItemsPageState extends State<ArchivedItemsPage> {
       });
 
       final response = await InventoryAPI.getInventoryItems(
+        context: context,
         token: token,
         limit: limit,
         skip: skip,
@@ -110,6 +111,7 @@ class _ArchivedItemsPageState extends State<ArchivedItemsPage> {
 
       skip += limit;
       final response = await InventoryAPI.getInventoryItems(
+        context: context,
         token: token,
         limit: limit,
         skip: skip,

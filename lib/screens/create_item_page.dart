@@ -113,6 +113,7 @@ class _CreateItemPageState extends State<CreateItemPage> {
       );
 
       final Item createdItem = await InventoryAPI.createItem(
+        context: context,
         token: token,
         createItemRequest: request,
       );

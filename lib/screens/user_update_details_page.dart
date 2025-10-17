@@ -106,6 +106,7 @@ class _UserUpdateDetailsPageState extends State<UserUpdateDetailsPage> {
 
     try {
       await UserAPI.updateUserDetails(
+        context: context,
         token: token,
         updateUserRequest: updateUserRequest,
       ).timeout(const Duration(seconds: 15));

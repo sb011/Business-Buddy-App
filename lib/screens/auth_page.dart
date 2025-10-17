@@ -1,7 +1,9 @@
+import 'package:business_buddy_app/constants/colors.dart';
 import 'package:business_buddy_app/screens/register_page.dart';
 import 'package:flutter/material.dart';
 
 import '../constants/strings.dart';
+import '../constants/style.dart';
 import '../utils/shared_preferences.dart';
 import 'login_page.dart';
 import 'main_navigation.dart';
@@ -35,19 +37,44 @@ class _AuthPageState extends State<AuthPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Welcome Image
+              Image.asset(
+                'assets/images/welcome_img.png',
+                height: 300,
+                width: 300,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 200,
+                    width: 200,
+                    decoration: BoxDecoration(
+                      color: Colors.blue[50],
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.blue[200]!, width: 2),
+                    ),
+                    child: const Icon(
+                      Icons.business,
+                      size: 80,
+                      color: Colors.blue,
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 30),
+              
               const Text(
                 "Business Buddy",
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: Colors.blueAccent,
+                  color: AppColors.textDarkPrimary,
                 ),
               ),
               const SizedBox(height: 12),
@@ -71,14 +98,18 @@ class _AuthPageState extends State<AuthPage> {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    backgroundColor: AppColors.textDarkPrimary,
+                    foregroundColor: AppColors.textLightPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(Style.radius), // Sharp edges
                     ),
+                    elevation: 4,
+                    shadowColor: AppColors.textSecondary,
                   ),
                   child: const Text(
                     "Register",
-                    style: TextStyle(fontSize: 18),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -97,15 +128,16 @@ class _AuthPageState extends State<AuthPage> {
                     );
                   },
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: const BorderSide(color: Colors.blueAccent, width: 2),
+                    foregroundColor: AppColors.textDarkPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    side: const BorderSide(color: AppColors.textDarkPrimary, width: 2),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(Style.radius),
                     ),
                   ),
                   child: const Text(
                     "Login",
-                    style: TextStyle(fontSize: 18, color: Colors.blueAccent),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),

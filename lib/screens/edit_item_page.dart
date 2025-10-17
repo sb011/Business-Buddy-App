@@ -64,6 +64,7 @@ class _EditItemPageState extends State<EditItemPage> {
       );
 
       await InventoryAPI.updateItem(
+        context: context,
         token: token,
         updateItemRequest: request,
       );

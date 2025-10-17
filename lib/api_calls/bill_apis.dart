@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:business_buddy_app/models/bill/bill.dart';
 import 'package:business_buddy_app/models/bill/bill_request.dart';
 import 'package:business_buddy_app/models/bill/bill_response.dart';
@@ -12,6 +13,7 @@ class AuthAPI {
   static const String _baseUrl = ApiEndpoints.baseUrl;
 
   static Future<List<BillResponse>> getBills({
+    required BuildContext context,
     required String token,
     required int limit,
     required int skip,
@@ -37,7 +39,7 @@ class AuthAPI {
       },
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to get bills.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to get bills.', context);
     if (!isValid) {
       throw Exception('Failed to get bills.');
     } else {
@@ -47,6 +49,7 @@ class AuthAPI {
   }
 
   static Future<BillResponse> createBill({
+    required BuildContext context,
     required String token,
     required CreateBillRequest createBillRequest
   }) async {
@@ -62,7 +65,7 @@ class AuthAPI {
       body: jsonEncode(createBillRequest.toJson()),
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to create bill.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to create bill.', context);
     if (!isValid) {
       throw Exception('Failed to create bill.');
     } else {
@@ -72,6 +75,7 @@ class AuthAPI {
   }
 
   static Future<List<Customer>> getCustomers({
+    required BuildContext context,
     required String token,
     required String query
   }) async {
@@ -90,7 +94,7 @@ class AuthAPI {
       },
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to get customer details.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to get customer details.', context);
     if (!isValid) {
       throw Exception('Failed to get customer details.');
     } else {

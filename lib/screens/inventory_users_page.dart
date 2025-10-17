@@ -42,7 +42,7 @@ class _InventoryUsersPageState extends State<InventoryUsersPage> {
         return;
       }
 
-      final inventoryUsers = await AuthAPI.getInventoryUsers(token: token);
+      final inventoryUsers = await AuthAPI.getInventoryUsers(context: context, token: token);
       setState(() {
         users = inventoryUsers;
         isLoading = false;
@@ -88,7 +88,7 @@ class _InventoryUsersPageState extends State<InventoryUsersPage> {
           return;
         }
 
-        await AuthAPI.removeUserFromInventory(token: token, userId: userId);
+        await AuthAPI.removeUserFromInventory(context: context, token: token, userId: userId);
         
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(

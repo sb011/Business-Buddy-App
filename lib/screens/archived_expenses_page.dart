@@ -70,6 +70,7 @@ class _ArchivedExpensesPageState extends State<ArchivedExpensesPage> {
         _hasReachedEnd = false;
       });
       final response = await ExpenseAPI.getExpenses(
+        context: context,
         token: token, 
         limit: limit, 
         skip: skip, 
@@ -106,6 +107,7 @@ class _ArchivedExpensesPageState extends State<ArchivedExpensesPage> {
 
       skip += limit;
       final response = await ExpenseAPI.getExpenses(
+        context: context,
         token: token,
         limit: limit,
         skip: skip,

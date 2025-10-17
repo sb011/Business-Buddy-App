@@ -86,7 +86,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
       }
 
       final request = ItemArchiveRequest(itemId: _currentItem.id, isArchive: true);
-      await InventoryAPI.archiveItem(token: token, itemArchiveRequest: request);
+      await InventoryAPI.archiveItem(context: context, token: token, itemArchiveRequest: request);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -149,7 +149,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
       }
 
       final request = ItemArchiveRequest(itemId: _currentItem.id, isArchive: false);
-      await InventoryAPI.archiveItem(token: token, itemArchiveRequest: request);
+      await InventoryAPI.archiveItem(context: context, token: token, itemArchiveRequest: request);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -212,7 +212,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
         itemVariantId: variant.id,
         isArchive: true,
       );
-      await InventoryAPI.archiveItemVariant(token: token, itemVariantArchiveRequest: request);
+      await InventoryAPI.archiveItemVariant(context: context, token: token, itemVariantArchiveRequest: request);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

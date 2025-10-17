@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:business_buddy_app/models/auth/auth_request.dart';
 import 'package:http/http.dart' as http;
 
@@ -10,6 +11,7 @@ class UserAPI {
   static const String _baseUrl = ApiEndpoints.baseUrl;
 
   static Future<void> updateUserDetails({
+    required BuildContext context,
     required String token,
     required UpdateUserRequest updateUserRequest
   }) async {
@@ -24,7 +26,7 @@ class UserAPI {
       body: jsonEncode(updateUserRequest.toJson()),
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to update details.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to update details.', context);
     if (!isValid) {
       throw Exception('Failed to update details.');
     }

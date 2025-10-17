@@ -64,7 +64,7 @@ class _EditExpensePageState extends State<EditExpensePage> {
         amount: double.parse(_amountController.text.trim()),
       );
 
-      await ExpenseAPI.updateExpense(token: token, updateExpenseRequest: request);
+      await ExpenseAPI.updateExpense(context: context, token: token, updateExpenseRequest: request);
 
       final updated = Expense(
         id: widget.expense.id,

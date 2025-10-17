@@ -68,6 +68,7 @@ class _BillPageState extends State<BillPage> {
         _hasReachedEnd = false;
       });
       final response = await AuthAPI.getBills(
+        context: context,
         token: token, 
         limit: limit, 
         skip: skip,
@@ -103,6 +104,7 @@ class _BillPageState extends State<BillPage> {
 
       skip += limit;
       final response = await AuthAPI.getBills(
+        context: context,
         token: token,
         limit: limit,
         skip: skip,

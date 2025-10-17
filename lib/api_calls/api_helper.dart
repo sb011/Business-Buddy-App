@@ -19,12 +19,12 @@ class ApiHelper {
     return statusCode >= 500 && statusCode < 600;
   }
 
-  static Future<bool> validateResponse(http.Response response, String message, {BuildContext? context}) async {
+  static Future<bool> validateResponse(http.Response response, String message, BuildContext context) async {
     if (isSuccess(response.statusCode)) {
       return true;
     } else if (response.statusCode == 401) {
       await StorageService.clearAll();
-      if (context != null && context.mounted) {
+      if (context.mounted) {
         CustomSnackBar.showWarning(
           context,
           "Session expired. Please login again.",
@@ -41,7 +41,7 @@ class ApiHelper {
       }
       return false;
     } else if (response.statusCode == 403) {
-      if (context != null && context.mounted) {
+      if (context.mounted) {
         CustomSnackBar.showWarning(
           context,
           "You are not authorized to perform this action.",
@@ -56,13 +56,13 @@ class ApiHelper {
       }
       return false;
     } else if (isClientError(response.statusCode)) {
-      CustomSnackBar.showError(context!, message);
+      CustomSnackBar.showError(context, message);
       return false;
     } else if (isServerError(response.statusCode)) {
-      CustomSnackBar.showError(context!, message);
+      CustomSnackBar.showError(context, message);
       return false;
     } else {
-      CustomSnackBar.showError(context!, "Unknown error occurred.");
+      CustomSnackBar.showError(context, "Unknown error occurred.");
       return false;
     }
   }

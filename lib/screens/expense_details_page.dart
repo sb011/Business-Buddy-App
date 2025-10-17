@@ -74,7 +74,7 @@ class _ExpenseDetailsPageState extends State<ExpenseDetailsPage> {
       }
 
       final req = ExpenseArchiveRequest(expenseId: _current.id, isArchive: true);
-      await ExpenseAPI.archivedExpense(token: token, archiveExpenseRequest: req);
+      await ExpenseAPI.archivedExpense(context: context, token: token, archiveExpenseRequest: req);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -126,7 +126,7 @@ class _ExpenseDetailsPageState extends State<ExpenseDetailsPage> {
       }
 
       final req = ExpenseArchiveRequest(expenseId: _current.id, isArchive: false);
-      await ExpenseAPI.archivedExpense(token: token, archiveExpenseRequest: req);
+      await ExpenseAPI.archivedExpense(context: context, token: token, archiveExpenseRequest: req);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

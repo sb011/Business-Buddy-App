@@ -61,6 +61,7 @@ class _UpdateVariantPageState extends State<UpdateVariantPage> {
       );
 
       await InventoryAPI.updateItemVariant(
+        context: context,
         token: token,
         updateItemVariant: request,
       );

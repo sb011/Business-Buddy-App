@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:business_buddy_app/models/item/item.dart';
 import 'package:business_buddy_app/models/item/item_request.dart';
 import 'package:business_buddy_app/models/item/item_response.dart';
@@ -12,6 +13,7 @@ class InventoryAPI {
   static const String _baseUrl = ApiEndpoints.baseUrl;
 
   static Future<List<Item>> getInventoryItems({
+    required BuildContext context,
     required String token,
     required int limit,
     required int skip,
@@ -38,7 +40,7 @@ class InventoryAPI {
       },
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to get inventory items.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to get inventory items.', context);
     if (!isValid) {
       throw Exception('Failed to get inventory items.');
     } else {
@@ -48,6 +50,7 @@ class InventoryAPI {
   }
 
   static Future<Item> createItem({
+    required BuildContext context,
     required String token,
     required CreateItemRequest createItemRequest,
   }) async {
@@ -62,7 +65,7 @@ class InventoryAPI {
       body: jsonEncode(createItemRequest.toJson()),
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to create inventory items.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to create inventory items.', context);
     if (!isValid) {
       throw Exception('Failed to create inventory items.');
     } else {
@@ -72,6 +75,7 @@ class InventoryAPI {
   }
 
   static Future<void> updateItem({
+    required BuildContext context,
     required String token,
     required UpdateItemRequest updateItemRequest,
   }) async {
@@ -86,13 +90,14 @@ class InventoryAPI {
       body: jsonEncode(updateItemRequest.toJson()),
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to update inventory items.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to update inventory items.', context);
     if (!isValid) {
       throw Exception('Failed to update inventory items.');
     }
   }
 
   static Future<void> updateItemVariantStock({
+    required BuildContext context,
     required String token,
     required UpdateStockRequest updateStockRequest,
   }) async {
@@ -107,13 +112,14 @@ class InventoryAPI {
       body: jsonEncode(updateStockRequest.toJson()),
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to update item stock.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to update item stock.', context);
     if (!isValid) {
       throw Exception('Failed to update item stock.');
     }
   }
 
   static Future<List<ItemHistoryResponse>> getItemVariantHistory({
+    required BuildContext context,
     required String token,
     required String itemVariantId,
     required int limit,
@@ -135,7 +141,7 @@ class InventoryAPI {
       },
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to get item variant history.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to get item variant history.', context);
     if (!isValid) {
       throw Exception('Failed to get item variant history.');
     } else {
@@ -147,6 +153,7 @@ class InventoryAPI {
   }
 
   static Future<void> archiveItem({
+    required BuildContext context,
     required String token,
     required ItemArchiveRequest itemArchiveRequest,
   }) async {
@@ -161,13 +168,14 @@ class InventoryAPI {
       body: jsonEncode(itemArchiveRequest.toJson()),
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to archive item.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to archive item.', context);
     if (!isValid) {
       throw Exception('Failed to archive item.');
     }
   }
 
   static Future<ItemVariant> addItemVariant({
+    required BuildContext context,
     required String token,
     required AddItemVariant addItemVariant,
   }) async {
@@ -182,7 +190,7 @@ class InventoryAPI {
       body: jsonEncode(addItemVariant.toJson()),
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to add item variant.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to add item variant.', context);
     if (!isValid) {
       throw Exception('Failed to add item variant.');
     } else {
@@ -192,6 +200,7 @@ class InventoryAPI {
   }
 
   static Future<void> updateItemVariant({
+    required BuildContext context,
     required String token,
     required UpdateItemVariant updateItemVariant,
   }) async {
@@ -206,13 +215,14 @@ class InventoryAPI {
       body: jsonEncode(updateItemVariant.toJson()),
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to update item variant.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to update item variant.', context);
     if (!isValid) {
       throw Exception('Failed to update item variant.');
     }
   }
 
   static Future<void> archiveItemVariant({
+    required BuildContext context,
     required String token,
     required ItemVariantArchiveRequest itemVariantArchiveRequest,
   }) async {
@@ -227,13 +237,14 @@ class InventoryAPI {
       body: jsonEncode(itemVariantArchiveRequest.toJson()),
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to archive item variant.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to archive item variant.', context);
     if (!isValid) {
       throw Exception('Failed to archive item variant.');
     }
   }
 
   static Future<List<ItemVariant>> getArchivedItemVariants({
+    required BuildContext context,
     required String token,
   }) async {
     final Map<String, String> qp = {
@@ -249,7 +260,7 @@ class InventoryAPI {
       }
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to get archived items.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to get archived items.', context);
     if (!isValid) {
       throw Exception('Failed to get archived items.');
     } else {

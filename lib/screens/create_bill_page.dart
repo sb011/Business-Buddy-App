@@ -56,7 +56,7 @@ class _CreateBillPageState extends State<CreateBillPage> {
     if (token == null) return;
     setState(() => _isSearchingCustomer = true);
     try {
-      final customers = await AuthAPI.getCustomers(token: token, query: v.trim());
+      final customers = await AuthAPI.getCustomers(context: context, token: token, query: v.trim());
       if (!mounted) return;
       setState(() {
         _isSearchingCustomer = false;
@@ -102,6 +102,7 @@ class _CreateBillPageState extends State<CreateBillPage> {
     setState(() => _isSearchingItems = true);
     try {
       final results = await InventoryAPI.getInventoryItems(
+        context: context,
         token: token,
         limit: 5,
         skip: 0,
@@ -235,7 +236,7 @@ class _CreateBillPageState extends State<CreateBillPage> {
     try {
       setState(() => _isSubmitting = true);
       final request = CreateBillRequest(customer: customer, items: _billItems);
-      final BillResponse created = await AuthAPI.createBill(token: token, createBillRequest: request);
+      final BillResponse created = await AuthAPI.createBill(context: context, token: token, createBillRequest: request);
       if (!mounted) return;
       Navigator.of(context).pop(created);
     } catch (e) {

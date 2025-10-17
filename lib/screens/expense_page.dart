@@ -69,6 +69,7 @@ class _ExpensePageState extends State<ExpensePage> {
         _hasReachedEnd = false;
       });
       final response = await ExpenseAPI.getExpenses(
+        context: context,
         token: token, 
         limit: limit, 
         skip: skip, 
@@ -105,6 +106,7 @@ class _ExpensePageState extends State<ExpensePage> {
 
       skip += limit;
       final response = await ExpenseAPI.getExpenses(
+        context: context,
         token: token,
         limit: limit,
         skip: skip,

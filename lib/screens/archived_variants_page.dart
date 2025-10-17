@@ -40,7 +40,7 @@ class _ArchivedVariantsPageState extends State<ArchivedVariantsPage> {
         return;
       }
 
-      final variants = await InventoryAPI.getArchivedItemVariants(token: token);
+      final variants = await InventoryAPI.getArchivedItemVariants(context: context, token: token);
       
       if (!mounted) return;
       setState(() {
@@ -100,7 +100,7 @@ class _ArchivedVariantsPageState extends State<ArchivedVariantsPage> {
         itemVariantId: variant.id,
         isArchive: false,
       );
-      await InventoryAPI.archiveItemVariant(token: token, itemVariantArchiveRequest: request);
+      await InventoryAPI.archiveItemVariant(context: context, token: token, itemVariantArchiveRequest: request);
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(

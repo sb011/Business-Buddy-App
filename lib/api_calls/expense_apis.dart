@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
+import 'package:flutter/material.dart';
 import '../constants/api.dart';
 import '../models/expense/expense.dart';
 import '../models/expense/expense_request.dart';
@@ -11,6 +12,7 @@ class ExpenseAPI {
   static const String _baseUrl = ApiEndpoints.baseUrl;
 
   static Future<Expense> createExpense({
+    required BuildContext context,
     required String token,
     required CreateExpenseRequest createExpenseRequest,
   }) async {
@@ -25,7 +27,7 @@ class ExpenseAPI {
       body: jsonEncode(createExpenseRequest.toJson()),
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to create expense.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to create expense.', context);
     if (!isValid) {
       throw Exception('Failed to create expense.');
     } else {
@@ -35,6 +37,7 @@ class ExpenseAPI {
   }
 
   static Future<List<Expense>> getExpenses({
+    required BuildContext context,
     required String token,
     required int limit,
     required int skip,
@@ -62,7 +65,7 @@ class ExpenseAPI {
       },
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to get expense.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to get expense.', context);
     if (!isValid) {
       throw Exception('Failed to get expense.');
     } else {
@@ -72,6 +75,7 @@ class ExpenseAPI {
   }
 
   static Future<void> updateExpense({
+    required BuildContext context,
     required String token,
     required UpdateExpenseRequest updateExpenseRequest,
   }) async {
@@ -86,13 +90,14 @@ class ExpenseAPI {
       body: jsonEncode(updateExpenseRequest.toJson()),
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to update expense.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to update expense.', context);
     if (!isValid) {
       throw Exception('Failed to update expense.');
     }
   }
 
   static Future<void> archivedExpense({
+    required BuildContext context,
     required String token,
     required ExpenseArchiveRequest archiveExpenseRequest,
   }) async {
@@ -107,7 +112,7 @@ class ExpenseAPI {
       body: jsonEncode(archiveExpenseRequest.toJson()),
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to archive expense.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to archive expense.', context);
     if (!isValid) {
       throw Exception('Failed to archive expense.');
     }

@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:business_buddy_app/api_calls/api_helper.dart';
 import 'package:business_buddy_app/models/auth/auth_request.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import '../constants/api.dart';
@@ -10,7 +11,7 @@ import '../models/auth/auth_response.dart';
 class AuthAPI {
   static const String _baseUrl = ApiEndpoints.baseUrl;
 
-  static Future<void> register({required RegisterRequest registerRequest}) async {
+  static Future<void> register({required BuildContext context, required RegisterRequest registerRequest}) async {
     final uri = Uri.parse('$_baseUrl/${ApiEndpoints.register}');
     final response = await http.post(
       uri,
@@ -18,13 +19,16 @@ class AuthAPI {
       body: jsonEncode(registerRequest.toJson()),
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to register.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to register.', context);
     if (!isValid) {
       return;
     }
   }
 
-  static Future<void> login({required LoginRequest loginRequest}) async {
+  static Future<void> login({
+    required BuildContext context,
+    required LoginRequest loginRequest,
+  }) async {
     final uri = Uri.parse('$_baseUrl/${ApiEndpoints.login}');
     final response = await http.post(
       uri,
@@ -32,13 +36,13 @@ class AuthAPI {
       body: jsonEncode(loginRequest.toJson()),
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to login.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to login.', context);
     if (!isValid) {
-      return;
+      throw Exception('Failed to login.');
     }
   }
 
-  static Future<ValidateOtpResponse> validateOtp({required OtpRequest otpRequest}) async {
+  static Future<ValidateOtpResponse> validateOtp({required BuildContext context, required OtpRequest otpRequest}) async {
     final uri = Uri.parse('$_baseUrl/${ApiEndpoints.validateOtp}');
     final response = await http.post(
       uri,
@@ -46,7 +50,7 @@ class AuthAPI {
       body: jsonEncode(otpRequest.toJson()),
     ).timeout(const Duration(seconds: 15));
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to login.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to login.',context);
     if (!isValid) {
       throw Exception('Failed to login.');
     } else {
@@ -56,6 +60,7 @@ class AuthAPI {
   }
 
   static Future<List<UserWithRole>> getInventoryUsers({
+    required BuildContext context,
     required String token,
   }) async {
     final uri = Uri.parse(
@@ -69,7 +74,7 @@ class AuthAPI {
       },
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to get inventory users.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to get inventory users.', context);
     if (!isValid) {
       throw Exception('Failed to get inventory users.');
     } else {
@@ -79,6 +84,7 @@ class AuthAPI {
   }
 
   static Future<void> addUsersToInventory({
+    required BuildContext context,
     required String token,
     required AddUsersToInventoryRequest addUsersToInventoryRequest
   }) async {
@@ -94,13 +100,14 @@ class AuthAPI {
       body: jsonEncode(addUsersToInventoryRequest.toJson())
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to add users into inventory.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to add users into inventory.', context);
     if (!isValid) {
       throw Exception('Failed to add users into inventory.');
     }
   }
 
   static Future<void> removeUserFromInventory({
+    required BuildContext context,
     required String token,
     required String userId
   }) async {
@@ -119,7 +126,7 @@ class AuthAPI {
         },
     );
 
-    bool isValid = await ApiHelper.validateResponse(response, 'Failed to remove user from inventory.');
+    bool isValid = await ApiHelper.validateResponse(response, 'Failed to remove user from inventory.', context);
     if (!isValid) {
       throw Exception('Failed to remove user from inventory.');
     }

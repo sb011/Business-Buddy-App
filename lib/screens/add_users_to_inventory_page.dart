@@ -99,6 +99,7 @@ class _AddUsersToInventoryPageState extends State<AddUsersToInventoryPage> {
       final request = AddUsersToInventoryRequest(users: users);
 
       await AuthAPI.addUsersToInventory(
+        context: context,
         token: token,
         addUsersToInventoryRequest: request,
       );
