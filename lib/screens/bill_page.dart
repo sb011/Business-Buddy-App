@@ -1,8 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:timeago/timeago.dart' as timeago;
 import '../api_calls/bill_apis.dart';
 import '../constants/strings.dart';
 import '../constants/permissions.dart';
+import '../constants/colors.dart';
+import '../widgets/custom_text_field.dart';
+import '../widgets/custom_button.dart';
+import '../widgets/custom_dialog.dart';
 import '../models/bill/bill_response.dart';
 import '../utils/shared_preferences.dart';
 import '../widgets/permission_wrapper.dart';
@@ -47,7 +52,10 @@ class _BillPageState extends State<BillPage> {
     // Only trigger if we're near the bottom and not already loading
     if (_scrollController.position.pixels >=
         _scrollController.position.maxScrollExtent - 200) {
-      if (!_isLoadingMore && !_isLoading && !_hasReachedEnd && bills.isNotEmpty) {
+      if (!_isLoadingMore &&
+          !_isLoading &&
+          !_hasReachedEnd &&
+          bills.isNotEmpty) {
         _loadMoreBills();
       }
     }
@@ -55,11 +63,15 @@ class _BillPageState extends State<BillPage> {
 
   Future<void> _fetchBills({String? query}) async {
     try {
-      final String? token = await StorageService.getString(AppStrings.authToken);
+      final String? token = await StorageService.getString(
+        AppStrings.authToken,
+      );
       if (token == null) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Authentication token not found. Please login again.')),
+        CustomDialogs.showError(
+          context: context,
+          title: 'Authentication Error',
+          message: 'Authentication token not found. Please login again.',
         );
         return;
       }
@@ -69,8 +81,8 @@ class _BillPageState extends State<BillPage> {
       });
       final response = await AuthAPI.getBills(
         context: context,
-        token: token, 
-        limit: limit, 
+        token: token,
+        limit: limit,
         skip: skip,
         searchQuery: query,
       );
@@ -82,21 +94,25 @@ class _BillPageState extends State<BillPage> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
+      CustomDialogs.showError(
+        context: context,
+        title: 'Error Loading Bills',
+        message: 'Error: $e',
       );
     }
   }
 
   Future<void> _loadMoreBills() async {
     if (_isLoadingMore) return;
-    
+
     setState(() {
       _isLoadingMore = true;
     });
 
     try {
-      final String? token = await StorageService.getString(AppStrings.authToken);
+      final String? token = await StorageService.getString(
+        AppStrings.authToken,
+      );
       if (token == null) {
         setState(() => _isLoadingMore = false);
         return;
@@ -122,8 +138,10 @@ class _BillPageState extends State<BillPage> {
     } catch (e) {
       setState(() => _isLoadingMore = false);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading more bills: $e')),
+      CustomDialogs.showError(
+        context: context,
+        title: 'Error Loading More Bills',
+        message: 'Error loading more bills: $e',
       );
     }
   }
@@ -132,10 +150,10 @@ class _BillPageState extends State<BillPage> {
     setState(() {
       _searchQuery = query;
     });
-    
+
     // Cancel previous timer
     _searchTimer?.cancel();
-    
+
     // Debounce search
     _searchTimer = Timer(const Duration(milliseconds: 500), () {
       if (_searchQuery == query) {
@@ -163,11 +181,7 @@ class _BillPageState extends State<BillPage> {
     return PermissionWrapper(
       permission: AppPermissions.getBill,
       child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Bills'),
-          backgroundColor: Colors.green,
-          foregroundColor: Colors.white,
-        ),
+        backgroundColor: AppColors.background,
         floatingActionButton: FloatingActionButton(
           onPressed: () async {
             final created = await Navigator.of(context).push(
@@ -180,142 +194,241 @@ class _BillPageState extends State<BillPage> {
               });
             }
           },
-          backgroundColor: Colors.green,
+          backgroundColor: AppColors.textDarkPrimary,
           child: const Icon(Icons.add, color: Colors.white),
         ),
-      body: Column(
-        children: [
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _onSearchChanged,
-              decoration: InputDecoration(
-                hintText: 'Search bills by customer name or mobile...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear),
-                        onPressed: _clearSearch,
-                      )
-                    : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Header Section
+              Container(
+                padding: const EdgeInsets.all(20.0),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.textSecondary.withValues(alpha: 0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-                filled: true,
-                fillColor: Colors.grey[100],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Bills',
+                      style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textDarkPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Search Bar
+                    CustomTextField(
+                      controller: _searchController,
+                      hintText: 'Search bills by customer name or mobile...',
+                      prefixIcon: Icons.search,
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(
+                                Icons.clear,
+                                color: AppColors.textSecondary,
+                              ),
+                              onPressed: _clearSearch,
+                            )
+                          : null,
+                      onChanged: _onSearchChanged,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ),
-          Expanded(
-            child: RefreshIndicator(
-              onRefresh: () async {
-                setState(() {
-                  bills.clear();
-                  skip = 0;
-                });
-                await _fetchBills(query: _searchQuery.isNotEmpty ? _searchQuery : null);
-              },
-              child: _isLoading && bills.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
-                  : bills.isEmpty
-                      ? const Center(
+              Expanded(
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    setState(() {
+                      bills.clear();
+                      skip = 0;
+                    });
+                    await _fetchBills(
+                      query: _searchQuery.isNotEmpty ? _searchQuery : null,
+                    );
+                  },
+                  child: _isLoading && bills.isEmpty
+                      ? Center(
+                          child: CircularProgressIndicator(
+                            color: AppColors.textDarkPrimary,
+                          ),
+                        )
+                      : bills.isEmpty
+                      ? Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                Icons.receipt_long,
+                                Icons.receipt_long_outlined,
                                 size: 80,
-                                color: Colors.green,
+                                color: AppColors.textSecondary,
                               ),
-                              SizedBox(height: 20),
+                              const SizedBox(height: 20),
                               Text(
                                 'No bills found',
-                                style: TextStyle(fontSize: 18, color: Colors.grey),
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
+                              const SizedBox(height: 8),
                               Text(
                                 'Pull down to refresh',
-                                style: TextStyle(fontSize: 14, color: Colors.grey),
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: AppColors.textSecondary,
+                                ),
                               ),
                             ],
                           ),
                         )
                       : ListView.builder(
                           controller: _scrollController,
+                          padding: const EdgeInsets.all(20.0),
                           itemCount: bills.length + (_isLoadingMore ? 1 : 0),
                           itemBuilder: (context, index) {
                             if (index == bills.length) {
-                              return const Center(
+                              return Center(
                                 child: Padding(
-                                  padding: EdgeInsets.all(16.0),
-                                  child: CircularProgressIndicator(),
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: CircularProgressIndicator(
+                                    color: AppColors.textDarkPrimary,
+                                  ),
                                 ),
                               );
                             }
 
                             final bill = bills[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: ListTile(
-                          onTap: () async {
-                            await Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => BillDetailsPage(bill: bill),
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              child: Material(
+                                color: AppColors.background,
+                                borderRadius: BorderRadius.circular(12),
+                                elevation: 2,
+                                shadowColor: AppColors.textSecondary.withValues(
+                                  alpha: 0.1,
+                                ),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(12),
+                                  onTap: () async {
+                                    await Navigator.of(context).push(
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            BillDetailsPage(bill: bill),
+                                      ),
+                                    );
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 48,
+                                          height: 48,
+                                          decoration: BoxDecoration(
+                                            color: AppColors.textDarkPrimary
+                                                .withValues(alpha: 0.1),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          child: Center(
+                                            child: Text(
+                                              bill.customer.name.isNotEmpty
+                                                  ? bill.customer.name[0]
+                                                        .toUpperCase()
+                                                  : '?',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 18,
+                                                color:
+                                                    AppColors.textDarkPrimary,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 16),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                bill.customer.name,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 16,
+                                                  color:
+                                                      AppColors.textDarkPrimary,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                'Items: ${bill.items.length}',
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color:
+                                                      AppColors.textSecondary,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                bill.customer.mobileNumber,
+                                                style: TextStyle(
+                                                  fontSize: 14,
+                                                  color:
+                                                      AppColors.textSecondary,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                timeago.format(bill.createdAt),
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color:
+                                                      AppColors.textSecondary,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.end,
+                                          children: [
+                                            Text(
+                                              '₹${bill.totalAmount.toStringAsFixed(2)}',
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                                color: AppColors.success,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ),
                             );
                           },
-                          leading: CircleAvatar(
-                            backgroundColor: Colors.green.shade100,
-                            child: Text(
-                              bill.customer.name.isNotEmpty ? bill.customer.name[0].toUpperCase() : '?',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.green.shade800,
-                              ),
-                            ),
-                          ),
-                          title: Text(
-                            bill.customer.name,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text('Items: ${bill.items.length}'),
-                              const SizedBox(height: 4),
-                              Text('Customer Mob: ${bill.customer.mobileNumber}'),
-                            ],
-                          ),
-                          trailing: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                '₹${bill.totalAmount.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: Colors.green,
-                                ),
-                              ),
-                              Text(
-                                'ID: ${bill.id.substring(0, 8)}...',
-                                style: const TextStyle(fontSize: 10, color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                          isThreeLine: true,
                         ),
-                      );
-                          },
-                        ),
-            ),
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
-    ),
     );
   }
 }
-

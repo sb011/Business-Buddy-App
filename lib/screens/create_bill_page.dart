@@ -3,8 +3,11 @@ import '../api_calls/bill_apis.dart';
 import '../api_calls/inventory_apis.dart';
 import '../constants/strings.dart';
 import '../constants/permissions.dart';
+import '../constants/colors.dart';
+import '../widgets/custom_text_field.dart';
 import '../models/bill/bill_request.dart';
 import '../models/bill/bill_response.dart';
+import '../models/bill/bill.dart';
 import '../models/item/item.dart';
 import '../utils/shared_preferences.dart';
 import '../widgets/permission_wrapper.dart';
@@ -20,14 +23,13 @@ class _CreateBillPageState extends State<CreateBillPage> {
   final TextEditingController _mobileController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _itemSearchController = TextEditingController();
-
+  
   CreateBillCustomer? _selectedCustomer; // set when user picks existing
   List<CreateBillItem> _billItems = [];
-  List<Item> _searchResults = [];
-  Map<String, Item> _billItemDetails = {}; // persist item details for added items
-  Map<String, ItemVariant> _billItemVariants = {}; // track variants for each bill item (itemId+variantId)
-  bool _isSearchingCustomer = false;
-  bool _isSearchingItems = false;
+  Map<String, Item> _billItemDetails =
+      {}; // persist item details for added items
+  Map<String, ItemVariant> _billItemVariants =
+      {}; // track variants for each bill item (itemId+variantId)
   bool _isSubmitting = false;
 
   @override
@@ -50,77 +52,83 @@ class _CreateBillPageState extends State<CreateBillPage> {
     return total;
   }
 
-  Future<void> _searchCustomersIfNeeded(String v) async {
-    if (v.trim().length < 5) return;
+  // Search customers by mobile number
+  Future<void> _searchCustomersIfNeeded(String mobileNumber) async {
+    
+    if (mobileNumber.trim().length < 5) {
+      // Don't clear results immediately, just don't search
+      return;
+    }
+    
     final String? token = await StorageService.getString(AppStrings.authToken);
-    if (token == null) return;
-    setState(() => _isSearchingCustomer = true);
+    if (token == null) {
+      return;
+    }
+    
+    // Don't set loading state here to avoid flickering
     try {
-      final customers = await AuthAPI.getCustomers(context: context, token: token, query: v.trim());
+      final customers = await AuthAPI.getCustomers(
+        context: context,
+        token: token,
+        query: mobileNumber.trim(),
+      );
       if (!mounted) return;
-      setState(() {
-        _isSearchingCustomer = false;
-      });
-      if (!mounted) return;
+      
+      // Show customer selection dialog
       if (customers.isNotEmpty) {
-        // Show a bottom sheet list to pick
-        final picked = await showModalBottomSheet<CreateBillCustomer>(
-          context: context,
-          builder: (ctx) {
-            return ListView.separated(
-              itemCount: customers.length,
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (ctx, idx) {
-                final c = customers[idx];
-                return ListTile(
-                  title: Text(c.name),
-                  subtitle: Text(c.mobileNumber),
-                  onTap: () => Navigator.of(ctx).pop(CreateBillCustomer(id: c.id, name: c.name, mobileNumber: c.mobileNumber)),
-                );
-              },
-            );
-          },
+        _showCustomerSelectionDialog(customers);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No customers found with this mobile number')),
         );
-        if (picked != null) {
-          setState(() {
-            _selectedCustomer = picked;
-            _nameController.text = picked.name;
-            _mobileController.text = picked.mobileNumber;
-          });
-        }
       }
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
-      setState(() => _isSearchingCustomer = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error searching customers: $e')),
+      );
     }
   }
 
+  // Search items by name
   Future<void> _searchItems() async {
     final String query = _itemSearchController.text.trim();
+    if (query.isEmpty) {
+      return;
+    }
+    
     final String? token = await StorageService.getString(AppStrings.authToken);
     if (token == null) return;
-    setState(() => _isSearchingItems = true);
+    
     try {
-      final results = await InventoryAPI.getInventoryItems(
+      final items = await InventoryAPI.getInventoryItems(
         context: context,
         token: token,
-        limit: 5,
+        limit: 20,
         skip: 0,
         archive: false,
-        query: query.isEmpty ? null : query,
+        query: query,
       );
       if (!mounted) return;
-      setState(() {
-        _searchResults = results;
-        _isSearchingItems = false;
-      });
-    } catch (_) {
+      
+      // Show item selection dialog
+      if (items.isNotEmpty) {
+        _showItemSelectionDialog(items);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No items found with this name')),
+        );
+      }
+    } catch (e) {
       if (!mounted) return;
-      setState(() => _isSearchingItems = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error searching items: $e')),
+      );
     }
   }
 
   void _addItemToBill(Item item) {
+    
     if (item.itemVariants.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('This item has no variants available')),
@@ -139,19 +147,69 @@ class _CreateBillPageState extends State<CreateBillPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Select Variant for ${item.name}'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: item.itemVariants.map((variant) {
-            return ListTile(
-              title: Text(variant.name),
-              subtitle: Text('₹${variant.price.toStringAsFixed(2)} • Stock: ${variant.quantity}'),
-              onTap: () {
-                Navigator.of(context).pop();
-                _addVariantToBill(item, variant);
-              },
-            );
-          }).toList(),
+        backgroundColor: AppColors.background,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(
+          'Select Variant for ${item.name}',
+          style: const TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textDarkPrimary,
+          ),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 300,
+          child: ListView.builder(
+            itemCount: item.itemVariants.length,
+            itemBuilder: (context, index) {
+              final variant = item.itemVariants[index];
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.textSecondary.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.textDarkPrimary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.inventory_2_outlined,
+                      color: AppColors.textDarkPrimary,
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    variant.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textDarkPrimary,
+                    ),
+                  ),
+                  subtitle: Text(
+                    '₹${variant.price.toStringAsFixed(2)} • Stock: ${variant.quantity}',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                  trailing: Icon(
+                    Icons.add_circle_outline,
+                    color: AppColors.textDarkPrimary,
+                  ),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _addVariantToBill(item, variant);
+                  },
+                ),
+              );
+            },
+          ),
         ),
         actions: [
           TextButton(
@@ -164,36 +222,45 @@ class _CreateBillPageState extends State<CreateBillPage> {
   }
 
   void _addVariantToBill(Item item, ItemVariant variant) {
-    // Check if this exact item-variant combination already exists
-    final existingIndex = _billItems.indexWhere((it) => it.itemId == item.id && it.itemVariantId == variant.id);
     
+    // Check if this exact item-variant combination already exists
+    final existingIndex = _billItems.indexWhere(
+      (it) => it.itemId == item.id && it.itemVariantId == variant.id,
+    );
+
     setState(() {
       _billItemDetails[item.id] = item; // persist details
       final variantKey = '${item.id}_${variant.id}';
-      _billItemVariants[variantKey] = variant; // track variant for this specific combination
-      
+      _billItemVariants[variantKey] =
+          variant; // track variant for this specific combination
+
       if (existingIndex >= 0) {
         // If same item-variant combination exists, increase quantity
         final current = _billItems[existingIndex];
         final qty = current.quantity;
         _billItems[existingIndex] = CreateBillItem(
-          itemId: current.itemId, 
+          itemId: current.itemId,
           itemVariantId: current.itemVariantId,
-          quantity: (qty + 1)
+          quantity: (qty + 1),
         );
       } else {
         // If different variant of same item or new item, add as new entry
-        _billItems = [..._billItems, CreateBillItem(
-          itemId: item.id, 
-          itemVariantId: variant.id,
-          quantity: 1
-        )];
+        _billItems = [
+          ..._billItems,
+          CreateBillItem(
+            itemId: item.id,
+            itemVariantId: variant.id,
+            quantity: 1,
+          ),
+        ];
       }
     });
   }
 
   void _updateItemQuantity(String itemId, String itemVariantId, int delta) {
-    final idx = _billItems.indexWhere((bi) => bi.itemId == itemId && bi.itemVariantId == itemVariantId);
+    final idx = _billItems.indexWhere(
+      (bi) => bi.itemId == itemId && bi.itemVariantId == itemVariantId,
+    );
     if (idx < 0) return;
     setState(() {
       final current = _billItems[idx];
@@ -202,9 +269,9 @@ class _CreateBillPageState extends State<CreateBillPage> {
         _billItems.removeAt(idx);
       } else {
         _billItems[idx] = CreateBillItem(
-          itemId: current.itemId, 
+          itemId: current.itemId,
           itemVariantId: current.itemVariantId,
-          quantity: qty
+          quantity: qty,
         );
       }
     });
@@ -215,38 +282,222 @@ class _CreateBillPageState extends State<CreateBillPage> {
     if (token == null) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Authentication token not found. Please login again.')),
+        const SnackBar(
+          content: Text('Authentication token not found. Please login again.'),
+        ),
       );
       return;
     }
 
-    if ((_selectedCustomer == null && (_nameController.text.trim().isEmpty || _mobileController.text.trim().isEmpty)) || _billItems.isEmpty) {
+    if ((_selectedCustomer == null && 
+            (_nameController.text.trim().isEmpty || _mobileController.text.trim().isEmpty)) ||
+        _billItems.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter customer details and add at least one item.')),
+        const SnackBar(
+          content: Text('Enter customer details and add at least one item.'),
+        ),
       );
       return;
     }
 
-    final CreateBillCustomer customer = _selectedCustomer ?? CreateBillCustomer(
-      id: null,
-      name: _nameController.text.trim(),
-      mobileNumber: _mobileController.text.trim(),
-    );
+    final CreateBillCustomer customer = _selectedCustomer ??
+        CreateBillCustomer(
+          id: null,
+          name: _nameController.text.trim(),
+          mobileNumber: _mobileController.text.trim(),
+        );
 
     try {
       setState(() => _isSubmitting = true);
       final request = CreateBillRequest(customer: customer, items: _billItems);
-      final BillResponse created = await AuthAPI.createBill(context: context, token: token, createBillRequest: request);
+      
+      // Debug logging
+      
+      final BillResponse created = await AuthAPI.createBill(
+        context: context,
+        token: token,
+        createBillRequest: request,
+      );
       if (!mounted) return;
       Navigator.of(context).pop(created);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to create bill: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to create bill: $e')));
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
+  }
+
+  // Show Customer Selection Dialog
+  void _showCustomerSelectionDialog(List<Customer> customers) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.background,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Select Customer',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textDarkPrimary,
+          ),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 400,
+          child: ListView.builder(
+            itemCount: customers.length,
+            itemBuilder: (context, index) {
+              final customer = customers[index];
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.textSecondary.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.textDarkPrimary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.person_outline,
+                      color: AppColors.textDarkPrimary,
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    customer.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textDarkPrimary,
+                    ),
+                  ),
+                  subtitle: Text(
+                    customer.mobileNumber,
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                  trailing: Icon(
+                    Icons.check_circle_outline,
+                    color: AppColors.textDarkPrimary,
+                  ),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    setState(() {
+                      _selectedCustomer = CreateBillCustomer(
+                        id: customer.id,
+                        name: customer.name,
+                        mobileNumber: customer.mobileNumber,
+                      );
+                      _nameController.text = customer.name;
+                    });
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Show Item Selection Dialog
+  void _showItemSelectionDialog(List<Item> items) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.background,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text(
+          'Select Item',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textDarkPrimary,
+          ),
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 400,
+          child: ListView.builder(
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final item = items[index];
+              final totalStock = item.itemVariants.fold<int>(0, (sum, variant) => sum + variant.quantity);
+              final priceRange = item.itemVariants.length == 1 
+                ? '₹${item.itemVariants.first.price.toStringAsFixed(2)}'
+                : '₹${item.itemVariants.map((v) => v.price).reduce((a, b) => a < b ? a : b).toStringAsFixed(2)} - ₹${item.itemVariants.map((v) => v.price).reduce((a, b) => a > b ? a : b).toStringAsFixed(2)}';
+              
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: AppColors.textSecondary.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: ListTile(
+                  leading: Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: AppColors.textDarkPrimary.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Icon(
+                      Icons.inventory_2_outlined,
+                      color: AppColors.textDarkPrimary,
+                      size: 20,
+                    ),
+                  ),
+                  title: Text(
+                    item.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textDarkPrimary,
+                    ),
+                  ),
+                  subtitle: Text(
+                    '$priceRange • ${item.itemVariants.length} variant(s) • Stock: $totalStock',
+                    style: TextStyle(color: AppColors.textSecondary),
+                  ),
+                  trailing: Icon(
+                    Icons.add_circle_outline,
+                    color: AppColors.textDarkPrimary,
+                  ),
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    _addItemToBill(item);
+                  },
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -254,175 +505,333 @@ class _CreateBillPageState extends State<CreateBillPage> {
     return PermissionWrapper(
       permission: AppPermissions.createBill,
       child: Scaffold(
+        backgroundColor: AppColors.background,
         appBar: AppBar(
-          title: const Text('Create Bill'),
-          backgroundColor: Colors.green,
-          foregroundColor: Colors.white,
-          actions: [
-          TextButton(
-            onPressed: _isSubmitting ? null : _submit,
-            child: _isSubmitting
-                ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                : const Text('Save', style: TextStyle(color: Colors.white)),
+          title: const Text(
+            'Create Bill',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textDarkPrimary,
+            ),
           ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Customer', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _mobileController,
-              keyboardType: TextInputType.phone,
-              decoration: InputDecoration(
-                labelText: 'Mobile number',
-                suffixIcon: _isSearchingCustomer
-                    ? const Padding(padding: EdgeInsets.all(8.0), child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2)))
-                    : null,
-              ),
-              onChanged: _searchCustomersIfNeeded,
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Customer name'),
-            ),
-            if (_selectedCustomer != null) ...[
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(Icons.check_circle, color: Colors.green, size: 18),
-                  const SizedBox(width: 6),
-                  Text('Selected: ${_selectedCustomer!.name}'),
-                  const Spacer(),
-                  TextButton(
-                    onPressed: () {
-                      setState(() => _selectedCustomer = null);
-                    },
-                    child: const Text('Change'),
-                  )
-                ],
-              )
-            ],
-
-            const SizedBox(height: 16),
-            const Text('Add Items', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _itemSearchController,
-                    decoration: const InputDecoration(labelText: 'Search items by name'),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  onPressed: _isSearchingItems ? null : _searchItems,
-                  child: _isSearchingItems
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Text('Search'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            if (_searchResults.isNotEmpty)
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _searchResults.length,
-                itemBuilder: (context, index) {
-                  final item = _searchResults[index];
-                  final totalStock = item.itemVariants.fold<int>(0, (sum, variant) => sum + variant.quantity);
-                  final priceRange = item.itemVariants.length == 1 
-                    ? '₹${item.itemVariants.first.price.toStringAsFixed(2)}'
-                    : '₹${item.itemVariants.map((v) => v.price).reduce((a, b) => a < b ? a : b).toStringAsFixed(2)} - ₹${item.itemVariants.map((v) => v.price).reduce((a, b) => a > b ? a : b).toStringAsFixed(2)}';
-                  
-                  return ListTile(
-                    title: Text(item.name),
-                    subtitle: Text('$priceRange • ${item.itemVariants.length} variant(s) • Total Stock: $totalStock'),
-                    trailing: const Icon(Icons.add_circle_outline),
-                    onTap: () => _addItemToBill(item),
-                  );
-                },
-              ),
-
-            const Divider(height: 24),
-            const Text('Bill Items', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            if (_billItems.isEmpty)
-              const Text('No items added yet', style: TextStyle(color: Colors.grey))
-            else
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _billItems.length,
-                itemBuilder: (context, index) {
-                  final bi = _billItems[index];
-                  final item = _billItemDetails[bi.itemId];
-                  final variantKey = '${bi.itemId}_${bi.itemVariantId}';
-                  final variant = _billItemVariants[variantKey];
-                  
-                  if (item == null || variant == null) {
-                    return const Card(
-                      child: ListTile(
-                        title: Text('Item not found'),
-                        subtitle: Text('Please refresh and try again'),
+          backgroundColor: AppColors.background,
+          foregroundColor: AppColors.textDarkPrimary,
+          elevation: 0,
+          iconTheme: IconThemeData(color: AppColors.textDarkPrimary),
+          actions: [
+            TextButton(
+              onPressed: _isSubmitting ? null : _submit,
+              child: _isSubmitting
+                  ? SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.textDarkPrimary,
                       ),
-                    );
-                  }
-                  
-                  return Card(
-                    child: ListTile(
-                      title: Text(item.name),
-                      subtitle: Text('${variant.name} • ₹${variant.price.toStringAsFixed(2)} • Qty: ${bi.quantity}'),
-                      trailing: Row(
-                        mainAxisSize: MainAxisSize.min,
+                    )
+                  : Text(
+                      'Save',
+                      style: TextStyle(
+                        color: AppColors.textDarkPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+            ),
+            const SizedBox(width: 8),
+          ],
+        ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Scrollable content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header Section
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.remove_circle_outline),
-                            onPressed: () => _updateItemQuantity(bi.itemId, bi.itemVariantId, -1),
+                          const Text(
+                            'Create New Bill',
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: AppColors.textDarkPrimary,
+                            ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.add_circle_outline),
-                            onPressed: () => _updateItemQuantity(bi.itemId, bi.itemVariantId, 1),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Add customer details and items to create a bill',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 32),
+                        ],
+                      ),
+
+                       // Customer Section
+                       Text(
+                         'Customer Details',
+                         style: const TextStyle(
+                           fontSize: 20,
+                           fontWeight: FontWeight.bold,
+                           color: AppColors.textDarkPrimary,
+                         ),
+                       ),
+                       const SizedBox(height: 16),
+                       
+                       // Mobile Number Search
+                       CustomTextField(
+                         controller: _mobileController,
+                         hintText: 'Mobile Number',
+                         prefixIcon: Icons.phone,
+                         keyboardType: TextInputType.phone,
+                         suffixIcon: null,
+                         onChanged: _searchCustomersIfNeeded,
+                       ),
+                       
+                       // Customer Name Input (for new customers)
+                       const SizedBox(height: 16),
+                       CustomTextField(
+                         controller: _nameController,
+                         hintText: 'Customer Name',
+                         prefixIcon: Icons.person,
+                       ),
+                       
+                       // Selected Customer Display
+                       if (_selectedCustomer != null) ...[
+                         const SizedBox(height: 16),
+                         Container(
+                           padding: const EdgeInsets.all(16),
+                           decoration: BoxDecoration(
+                             color: AppColors.success.withValues(alpha: 0.1),
+                             borderRadius: BorderRadius.circular(12),
+                             border: Border.all(
+                               color: AppColors.success.withValues(alpha: 0.3),
+                             ),
+                           ),
+                           child: Row(
+                             children: [
+                               Icon(Icons.check_circle, color: AppColors.success, size: 20),
+                               const SizedBox(width: 12),
+                               Expanded(
+                                 child: Column(
+                                   crossAxisAlignment: CrossAxisAlignment.start,
+                                   children: [
+                                     Text(
+                                       'Selected: ${_selectedCustomer!.name}',
+                                       style: const TextStyle(
+                                         fontWeight: FontWeight.w600,
+                                         color: AppColors.textDarkPrimary,
+                                       ),
+                                     ),
+                                     Text(
+                                       _selectedCustomer!.mobileNumber,
+                                       style: TextStyle(color: AppColors.textSecondary),
+                                     ),
+                                   ],
+                                 ),
+                               ),
+                               TextButton(
+                                 onPressed: () {
+                                   setState(() {
+                                     _selectedCustomer = null;
+                                     _nameController.clear();
+                                     _mobileController.clear();
+                                   });
+                                 },
+                                 child: const Text('Change'),
+                               ),
+                             ],
+                           ),
+                         ),
+                       ],
+
+                       const SizedBox(height: 32),
+                       
+                       // Items Section
+                       Text(
+                         'Add Items',
+                         style: const TextStyle(
+                           fontSize: 20,
+                           fontWeight: FontWeight.bold,
+                           color: AppColors.textDarkPrimary,
+                         ),
+                       ),
+                       const SizedBox(height: 16),
+                       
+                       // Item Search
+                       Row(
+                         children: [
+                           Expanded(
+                             child: CustomTextField(
+                               controller: _itemSearchController,
+                               hintText: 'Search items by name',
+                               prefixIcon: Icons.search,
+                             ),
+                           ),
+                           const SizedBox(width: 12),
+                           ElevatedButton(
+                             onPressed: _searchItems,
+                             style: ElevatedButton.styleFrom(
+                               backgroundColor: AppColors.textDarkPrimary,
+                               foregroundColor: AppColors.background,
+                               shape: RoundedRectangleBorder(
+                                 borderRadius: BorderRadius.circular(12),
+                               ),
+                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                             ),
+                             child: const Text('Search'),
+                           ),
+                         ],
+                       ),
+                       
+                       const Divider(height: 24),
+                      const Text(
+                        'Bill Items',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      if (_billItems.isEmpty)
+                        const Text(
+                          'No items added yet',
+                          style: TextStyle(color: Colors.grey),
+                        )
+                      else
+                        ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _billItems.length,
+                          itemBuilder: (context, index) {
+                            final bi = _billItems[index];
+                            final item = _billItemDetails[bi.itemId];
+                            final variantKey =
+                                '${bi.itemId}_${bi.itemVariantId}';
+                            final variant = _billItemVariants[variantKey];
+
+                            if (item == null || variant == null) {
+                              return const Card(
+                                child: ListTile(
+                                  title: Text('Item not found'),
+                                  subtitle: Text(
+                                    'Please refresh and try again',
+                                  ),
+                                ),
+                              );
+                            }
+
+                            return Card(
+                              child: ListTile(
+                                title: Text(item.name),
+                                subtitle: Text(
+                                  '${variant.name} • ₹${variant.price.toStringAsFixed(2)} • Qty: ${bi.quantity}',
+                                ),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.remove_circle_outline,
+                                      ),
+                                      onPressed: () => _updateItemQuantity(
+                                        bi.itemId,
+                                        bi.itemVariantId,
+                                        -1,
+                                      ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.add_circle_outline,
+                                      ),
+                                      onPressed: () => _updateItemQuantity(
+                                        bi.itemId,
+                                        bi.itemVariantId,
+                                        1,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          const Text(
+                            'Total: ',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            '₹${_totalAmount.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                  );
-                },
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
               ),
 
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                const Text('Total: ', style: TextStyle(fontWeight: FontWeight.bold)),
-                Text('₹${_totalAmount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
-              ],
-            ),
-            const SizedBox(height: 80),
-          ],
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: _isSubmitting ? null : _submit,
-              child: _isSubmitting
-                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                  : const Text('Create Bill'),
-            ),
+              // Fixed bottom button
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 20.0),
+                decoration: BoxDecoration(
+                  color: AppColors.background,
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.textSecondary.withValues(alpha: 0.1),
+                      offset: const Offset(0, -3),
+                      blurRadius: 6,
+                      spreadRadius: 0,
+                    ),
+                  ],
+                ),
+                child: ElevatedButton(
+                  onPressed: _isSubmitting ? null : _submit,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.textDarkPrimary,
+                    foregroundColor: AppColors.textLightPrimary,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: AppColors.textLightPrimary,
+                          ),
+                        )
+                      : const Text(
+                          'Create Bill',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
-    ),
     );
   }
 }
