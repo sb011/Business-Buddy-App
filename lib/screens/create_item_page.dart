@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../constants/strings.dart';
 import '../constants/permissions.dart';
+import '../constants/style.dart';
 import '../utils/shared_preferences.dart';
 import '../widgets/permission_wrapper.dart';
 
@@ -170,7 +171,7 @@ class _CreateItemPageState extends State<CreateItemPage> {
               const SizedBox(height: 20),
               
               // Variant management section
-              const Text('Item Variants', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const Text('Item Variants', style: TextStyle(fontSize: Style.fontSize5, fontWeight: FontWeight.bold)),
               const SizedBox(height: 12),
               
               // Add variant form

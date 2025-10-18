@@ -73,7 +73,7 @@ class _AuthPageState extends State<AuthPage> {
               const Text(
                 "Business Buddy",
                 style: TextStyle(
-                  fontSize: 28,
+                  fontSize: Style.fontSize3,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textDarkPrimary,
                 ),
@@ -82,7 +82,7 @@ class _AuthPageState extends State<AuthPage> {
               const Text(
                 "Manage your business easily\nTrack inventory, sales & customers",
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 16, color: Colors.black54),
+                style: TextStyle(fontSize: Style.fontSize6, color: Colors.black54),
               ),
               const SizedBox(height: 60),
 

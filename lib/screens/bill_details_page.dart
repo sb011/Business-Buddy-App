@@ -212,7 +212,7 @@ class _SummarySection extends StatelessWidget {
               children: [
                 Text('₹${bill.totalAmount.toStringAsFixed(2)}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.green)),
                 if ((bill.totalAmount - computed).abs() > 0.009)
-                  Text('Calc: ₹${computed.toStringAsFixed(2)}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                  Text('Calc: ₹${computed.toStringAsFixed(2)}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
               ],
             ),
           ],

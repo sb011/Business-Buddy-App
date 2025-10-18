@@ -106,8 +106,8 @@ class CustomTextField extends StatelessWidget {
             Radius.circular(borderRadius ?? Style.radius),
           ),
           borderSide: BorderSide(
-            color: borderColor ?? AppColors.textSecondary,
-            width: borderWidth ?? 1.5,
+            color: borderColor ?? AppColors.textSecondary.withValues(alpha: 0.3),
+            width: borderWidth ?? 1,
           ),
         ),
         focusedBorder: OutlineInputBorder(
@@ -115,8 +115,8 @@ class CustomTextField extends StatelessWidget {
             Radius.circular(borderRadius ?? Style.radius),
           ),
           borderSide: BorderSide(
-            color: focusedBorderColor ?? AppColors.textDarkPrimary,
-            width: focusedBorderWidth ?? 2,
+            color: focusedBorderColor ?? AppColors.textSecondary,
+            width: focusedBorderWidth ?? 1.5,
           ),
         ),
         errorBorder: OutlineInputBorder(
@@ -124,8 +124,8 @@ class CustomTextField extends StatelessWidget {
             Radius.circular(borderRadius ?? Style.radius),
           ),
           borderSide: BorderSide(
-            color: errorBorderColor ?? AppColors.danger,
-            width: errorBorderWidth ?? 2,
+            color: errorBorderColor ?? AppColors.danger.withValues(alpha: 0.5),
+            width: errorBorderWidth ?? 1.5,
           ),
         ),
         focusedErrorBorder: OutlineInputBorder(
@@ -134,7 +134,7 @@ class CustomTextField extends StatelessWidget {
           ),
           borderSide: BorderSide(
             color: errorBorderColor ?? AppColors.danger,
-            width: errorBorderWidth ?? 2,
+            width: errorBorderWidth ?? 1.5,
           ),
         ),
         disabledBorder: OutlineInputBorder(
@@ -142,7 +142,7 @@ class CustomTextField extends StatelessWidget {
             Radius.circular(borderRadius ?? Style.radius),
           ),
           borderSide: BorderSide(
-            color: AppColors.textSecondary.withOpacity(0.5),
+            color: AppColors.textSecondary.withValues(alpha: 0.3),
             width: borderWidth ?? 1.5,
           ),
         ),

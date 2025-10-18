@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import '../api_calls/expense_apis.dart';
 import '../constants/strings.dart';
 import '../constants/permissions.dart';
+import '../constants/colors.dart';
+import '../constants/style.dart';
 import '../models/expense/expense.dart';
 import '../utils/shared_preferences.dart';
 import '../widgets/permission_wrapper.dart';
@@ -153,31 +155,32 @@ class _ExpensePageState extends State<ExpensePage> {
     return PermissionWrapper(
       permission: AppPermissions.getExpense,
       child: Scaffold(
+        backgroundColor: AppColors.background,
         floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final created = await Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const CreateExpensePage()),
-          );
-          if (created is Expense) {
-            if (!mounted) return;
-            setState(() {
-              expenses = [created, ...expenses];
-            });
-          }
-        },
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-      body: Column(
+          onPressed: () async {
+            final created = await Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const CreateExpensePage()),
+            );
+            if (created is Expense) {
+              if (!mounted) return;
+              setState(() {
+                expenses = [created, ...expenses];
+              });
+            }
+          },
+          backgroundColor: AppColors.textDarkPrimary,
+          child: const Icon(Icons.add, color: Colors.white),
+        ),
+        body: Column(
         children: [
           // Header with Search Bar
           Container(
-            padding: const EdgeInsets.fromLTRB(16.0, 50.0, 16.0, 16.0), // Added top padding for status bar
+            padding: const EdgeInsets.fromLTRB(20.0, 50.0, 20.0, 20.0),
             decoration: BoxDecoration(
-              color: Colors.blue,
+              color: AppColors.background,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: AppColors.textSecondary.withOpacity(0.1),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
@@ -189,22 +192,22 @@ class _ExpensePageState extends State<ExpensePage> {
                 const Text(
                   'Expenses',
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: Style.fontSize3,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: AppColors.textDarkPrimary,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 20),
                 TextField(
                   controller: _searchController,
                   onChanged: _onSearchChanged,
                   decoration: InputDecoration(
                     hintText: 'Search expenses...',
-                    hintStyle: TextStyle(color: Colors.grey.shade600),
-                    prefixIcon: const Icon(Icons.search, color: Colors.blue),
+                    hintStyle: TextStyle(color: AppColors.textSecondary),
+                    prefixIcon: Icon(Icons.search, color: AppColors.textDarkPrimary),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.clear, color: Colors.blue),
+                            icon: Icon(Icons.clear, color: AppColors.textDarkPrimary),
                             onPressed: () {
                               _searchController.clear();
                               _onSearchChanged('');
@@ -213,14 +216,18 @@ class _ExpensePageState extends State<ExpensePage> {
                         : null,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.textSecondary.withOpacity(0.3)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Colors.white, width: 2),
+                      borderSide: BorderSide(color: AppColors.textDarkPrimary, width: 2),
                     ),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: AppColors.background,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 12,
@@ -244,7 +251,7 @@ class _ExpensePageState extends State<ExpensePage> {
                 await _fetchExpenses();
               },
               child: _isLoading && expenses.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
+                  ? Center(child: CircularProgressIndicator(color: AppColors.textDarkPrimary))
                   : expenses.isEmpty
                   ? Center(
                       child: Column(
@@ -253,21 +260,21 @@ class _ExpensePageState extends State<ExpensePage> {
                           Icon(
                             _searchQuery.isNotEmpty
                                 ? Icons.search_off
-                                : Icons.money_off,
+                                : Icons.monetization_on_outlined,
                             size: 80,
-                            color: Colors.orange,
+                            color: AppColors.textSecondary,
                           ),
                           const SizedBox(height: 20),
                           Text(
                             _searchQuery.isNotEmpty
                                 ? 'No expenses found for "$_searchQuery"'
                                 : 'No expenses found',
-                            style: const TextStyle(fontSize: 18, color: Colors.grey),
+                            style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
                           ),
                           if (_searchQuery.isEmpty)
-                            const Text(
+                            Text(
                               'Pull down to refresh',
-                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
                             ),
                         ],
                       ),
@@ -277,98 +284,125 @@ class _ExpensePageState extends State<ExpensePage> {
                       itemCount: expenses.length + (_isLoadingMore && !_hasReachedEnd ? 1 : 0),
                       itemBuilder: (context, index) {
                         if (index == expenses.length) {
-                          return const Center(
+                          return Center(
                             child: Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: CircularProgressIndicator(),
+                              padding: const EdgeInsets.all(16.0),
+                              child: CircularProgressIndicator(color: AppColors.textDarkPrimary),
                             ),
                           );
                         }
 
                       final expense = expenses[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: ListTile(
-                          onTap: () async {
-                            final result = await Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (context) => ExpenseDetailsPage(expense: expense),
-                              ),
-                            );
-                            if (result is Expense) {
-                              if (!mounted) return;
-                              setState(() {
-                                final int idx = expenses.indexWhere((e) => e.id == result.id);
-                                if (idx != -1) expenses[idx] = result;
-                              });
-                            } else if (result is Map && result['archivedId'] is String) {
-                              if (!mounted) return;
-                              setState(() {
-                                expenses.removeWhere((e) => e.id == result['archivedId']);
-                              });
-                            }
-                          },
-                          leading: CircleAvatar(
-                            backgroundColor: Colors.orange.shade100,
-                            child: Text(
-                              expense.title.isNotEmpty ? expense.title[0].toUpperCase() : '?',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.orange.shade800,
-                              ),
-                            ),
-                          ),
-                          title: Text(
-                            expense.title,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if ((expense.description).trim().isNotEmpty)
-                                Text(expense.description),
-                              if ((expense.description).trim().isNotEmpty)
-                                const SizedBox(height: 4),
-                              Row(
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        child: Material(
+                          color: AppColors.background,
+                          borderRadius: BorderRadius.circular(12),
+                          elevation: 2,
+                          shadowColor: AppColors.textSecondary.withOpacity(0.1),
+                          child: InkWell(
+                            onTap: () async {
+                              final result = await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => ExpenseDetailsPage(expense: expense),
+                                ),
+                              );
+                              if (result is Expense) {
+                                if (!mounted) return;
+                                setState(() {
+                                  final int idx = expenses.indexWhere((e) => e.id == result.id);
+                                  if (idx != -1) expenses[idx] = result;
+                                });
+                              } else if (result is Map && result['archivedId'] is String) {
+                                if (!mounted) return;
+                                setState(() {
+                                  expenses.removeWhere((e) => e.id == result['archivedId']);
+                                });
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(12),
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
                                 children: [
+                                  // Leading Icon
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                    padding: const EdgeInsets.all(12),
                                     decoration: BoxDecoration(
-                                      color: Colors.orange.shade100,
+                                      color: AppColors.textDarkPrimary.withOpacity(0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
-                                    child: Text(
-                                      expense.type,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.orange.shade800,
-                                        fontWeight: FontWeight.w500,
-                                      ),
+                                    child: Icon(
+                                      Icons.monetization_on_outlined,
+                                      color: AppColors.textDarkPrimary,
+                                      size: 24,
                                     ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  
+                                  // Content
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          expense.title,
+                                          style: const TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textDarkPrimary,
+                                          ),
+                                        ),
+                                        if (expense.description.trim().isNotEmpty) ...[
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            expense.description,
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: AppColors.textSecondary,
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                        const SizedBox(height: 8),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.textDarkPrimary.withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                          child: Text(
+                                            expense.type,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              color: AppColors.textDarkPrimary,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  
+                                  // Amount
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      Text(
+                                        '₹${expense.amount.toStringAsFixed(2)}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: AppColors.textDarkPrimary,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
-                            ],
+                            ),
                           ),
-                          trailing: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                '₹${expense.amount.toStringAsFixed(2)}',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: Colors.green,
-                                ),
-                              ),
-                              Text(
-                                'ID: ${expense.id.substring(0, 8)}...',
-                                style: const TextStyle(fontSize: 10, color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                          isThreeLine: true,
                         ),
                       );
                     },

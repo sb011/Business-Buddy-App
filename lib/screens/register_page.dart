@@ -109,7 +109,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 const Text(
                   'Create Account',
                   style: TextStyle(
-                    fontSize: 28,
+                    fontSize: Style.fontSize3,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textDarkPrimary,
                   ),
@@ -118,7 +118,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 const Text(
                   'Fill in your details to get started',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: Style.fontSize6,
                     color: AppColors.textSecondary,
                   ),
                 ),

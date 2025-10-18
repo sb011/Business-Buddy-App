@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../api_calls/expense_apis.dart';
 import '../constants/strings.dart';
 import '../constants/permissions.dart';
+import '../constants/style.dart';
 import '../models/expense/expense.dart';
 import '../utils/shared_preferences.dart';
 import '../widgets/permission_wrapper.dart';
@@ -185,7 +186,7 @@ class _ArchivedExpensesPageState extends State<ArchivedExpensesPage> {
                     const Text(
                       'Archived Expenses',
                       style: TextStyle(
-                        fontSize: 24,
+                        fontSize: Style.fontSize4,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
                       ),

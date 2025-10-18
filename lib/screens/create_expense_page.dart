@@ -3,10 +3,14 @@ import 'package:flutter/material.dart';
 import '../api_calls/expense_apis.dart';
 import '../constants/strings.dart';
 import '../constants/permissions.dart';
+import '../constants/colors.dart';
 import '../models/expense/expense.dart';
 import '../models/expense/expense_request.dart';
 import '../utils/shared_preferences.dart';
 import '../widgets/permission_wrapper.dart';
+import '../widgets/custom_text_field.dart';
+import '../widgets/custom_button.dart';
+import '../widgets/custom_dropdown.dart';
 
 class CreateExpensePage extends StatefulWidget {
   const CreateExpensePage({super.key});
@@ -75,76 +79,105 @@ class _CreateExpensePageState extends State<CreateExpensePage> {
     return PermissionWrapper(
       permission: AppPermissions.addExpense,
       child: Scaffold(
+        backgroundColor: AppColors.background,
         appBar: AppBar(
-          title: const Text('Create Expense'),
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
+          backgroundColor: AppColors.background,
+          foregroundColor: AppColors.textDarkPrimary,
+          elevation: 0,
+          iconTheme: IconThemeData(color: AppColors.textDarkPrimary),
         ),
-        body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextFormField(
-                  controller: _titleController,
-                  decoration: const InputDecoration(labelText: 'Title'),
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'Title is required' : null,
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _descriptionController,
-                  decoration: const InputDecoration(labelText: 'Description'),
-                  minLines: 2,
-                  maxLines: 4,
-                ),
-                const SizedBox(height: 12),
-                DropdownButtonFormField<String>(
-                  value: _type,
-                  items: const [
-                    DropdownMenuItem(value: 'GENERAL', child: Text('GENERAL')),
-                    DropdownMenuItem(value: 'LABOUR', child: Text('LABOUR')),
-                    DropdownMenuItem(value: 'RENT', child: Text('RENT')),
-                    DropdownMenuItem(value: 'PURCHASE', child: Text('PURCHASE')),
-                    DropdownMenuItem(value: 'OTHER', child: Text('OTHER')),
-                  ],
-                  onChanged: (v) => setState(() => _type = v ?? 'GENERAL'),
-                  decoration: const InputDecoration(labelText: 'Type'),
-                ),
-                const SizedBox(height: 12),
-                TextFormField(
-                  controller: _amountController,
-                  decoration: const InputDecoration(labelText: 'Amount (₹)'),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Amount is required';
-                    final parsed = double.tryParse(v.trim());
-                    if (parsed == null || parsed <= 0) return 'Enter a valid amount';
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _isSubmitting ? null : _submit,
-                    child: _isSubmitting
-                        ? const SizedBox(
-                            width: 18,
-                            height: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Create Expense'),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header Section
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Add New Expense',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textDarkPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Fill in the details to create a new expense',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                    ],
                   ),
-                ),
-              ],
+                  
+                  // Form Fields
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          CustomTextField(
+                            controller: _titleController,
+                            hintText: 'Expense Title',
+                            prefixIcon: Icons.title,
+                            validator: (v) => (v == null || v.trim().isEmpty) ? 'Title is required' : null,
+                          ),
+                          const SizedBox(height: 20),
+                          
+                          CustomTextField(
+                            controller: _descriptionController,
+                            hintText: 'Description (Optional)',
+                            prefixIcon: Icons.description,
+                            maxLines: 5,
+                          ),
+                          const SizedBox(height: 20),
+                          
+                          // Expense Type Dropdown
+                          CustomDropdowns.expenseType(
+                            value: _type,
+                            onChanged: (v) => setState(() => _type = v ?? 'GENERAL'),
+                          ),
+                          const SizedBox(height: 20),
+                          
+                          CustomTextField(
+                            controller: _amountController,
+                            hintText: 'Amount (₹)',
+                            prefixIcon: Icons.currency_rupee,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            validator: (v) {
+                              if (v == null || v.trim().isEmpty) return 'Amount is required';
+                              final parsed = double.tryParse(v.trim());
+                              if (parsed == null || parsed <= 0) return 'Enter a valid amount';
+                              return null;
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  
+                  // Submit Button
+                  const SizedBox(height: 20),
+                  CustomButtons.primary(
+                    text: 'Create Expense',
+                    onPressed: _isSubmitting ? null : _submit,
+                    isLoading: _isSubmitting,
+                    loadingText: 'Creating...',
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ),
     );
   }
 }

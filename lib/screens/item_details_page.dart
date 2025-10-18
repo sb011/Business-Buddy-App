@@ -7,6 +7,7 @@ import 'package:business_buddy_app/constants/permissions.dart';
 import 'package:business_buddy_app/widgets/permission_wrapper.dart';
 import 'package:flutter/material.dart';
 
+import '../constants/style.dart';
 import 'edit_item_page.dart';
 import 'add_stock_page.dart';
 import 'item_history_page.dart';
@@ -316,7 +317,7 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.blue.shade800,
-                      fontSize: 24,
+                      fontSize: Style.fontSize4,
                     ),
                   ),
                 ),

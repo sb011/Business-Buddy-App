@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../api_calls/auth_apis.dart';
+import '../constants/style.dart';
 import '../models/auth/auth_request.dart';
 import '../utils/shared_preferences.dart';
 import '../constants/strings.dart';
@@ -151,7 +152,7 @@ class _AddUsersToInventoryPageState extends State<AddUsersToInventoryPage> {
             children: [
               const Text(
                 'Add multiple users to your inventory',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                style: TextStyle(fontSize: Style.fontSize6, color: Colors.grey),
               ),
               const SizedBox(height: 20),
               Expanded(
@@ -170,7 +171,7 @@ class _AddUsersToInventoryPageState extends State<AddUsersToInventoryPage> {
                                 Text(
                                   'User ${index + 1}',
                                   style: const TextStyle(
-                                    fontSize: 18,
+                                    fontSize: Style.fontSize5,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),

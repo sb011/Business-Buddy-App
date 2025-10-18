@@ -3,10 +3,13 @@ import 'package:flutter/material.dart';
 import '../api_calls/expense_apis.dart';
 import '../constants/strings.dart';
 import '../constants/permissions.dart';
+import '../constants/colors.dart';
 import '../models/expense/expense.dart';
 import '../models/expense/expense_request.dart';
 import '../utils/shared_preferences.dart';
 import '../widgets/permission_wrapper.dart';
+import '../widgets/custom_button.dart';
+import '../widgets/custom_dialog.dart';
 import 'edit_expense_page.dart';
 
 class ExpenseDetailsPage extends StatefulWidget {
@@ -40,24 +43,10 @@ class _ExpenseDetailsPageState extends State<ExpenseDetailsPage> {
   }
 
   Future<void> _archive() async {
-    final bool? confirm = await showDialog<bool>(
+    final bool? confirm = await CustomDialogs.showArchiveConfirmation(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Archive Expense?'),
-          content: const Text('Are you sure you want to archive this expense?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Confirm'),
-            ),
-          ],
-        );
-      },
+      itemName: _current.title,
+      itemType: 'Expense',
     );
 
     if (confirm != true) return;
@@ -77,8 +66,10 @@ class _ExpenseDetailsPageState extends State<ExpenseDetailsPage> {
       await ExpenseAPI.archivedExpense(context: context, token: token, archiveExpenseRequest: req);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Expense archived successfully')),
+      await CustomDialogs.showSuccess(
+        context: context,
+        title: 'Success',
+        message: 'Expense archived successfully',
       );
       Navigator.of(context).pop({'archivedId': _current.id});
     } catch (e) {
@@ -92,24 +83,14 @@ class _ExpenseDetailsPageState extends State<ExpenseDetailsPage> {
   }
 
   Future<void> _unarchive() async {
-    final bool? confirm = await showDialog<bool>(
+    final bool? confirm = await CustomDialogs.showConfirmation(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Unarchive Expense?'),
-          content: const Text('Are you sure you want to unarchive this expense?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Confirm'),
-            ),
-          ],
-        );
-      },
+      title: 'Unarchive Expense?',
+      message: 'Are you sure you want to unarchive "${_current.title}"?',
+      confirmText: 'Unarchive',
+      cancelText: 'Cancel',
+      icon: Icons.unarchive,
+      iconColor: AppColors.success,
     );
 
     if (confirm != true) return;
@@ -129,8 +110,10 @@ class _ExpenseDetailsPageState extends State<ExpenseDetailsPage> {
       await ExpenseAPI.archivedExpense(context: context, token: token, archiveExpenseRequest: req);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Expense unarchived successfully')),
+      await CustomDialogs.showSuccess(
+        context: context,
+        title: 'Success',
+        message: 'Expense unarchived successfully',
       );
       Navigator.of(context).pop({'unarchivedId': _current.id});
     } catch (e) {
@@ -148,13 +131,28 @@ class _ExpenseDetailsPageState extends State<ExpenseDetailsPage> {
     return PermissionWrapper(
       permission: AppPermissions.getExpense,
       child: Scaffold(
+        backgroundColor: AppColors.background,
         appBar: AppBar(
-          leading: BackButton(onPressed: () => Navigator.of(context).pop(_current)),
-          title: const Text('Expense Details'),
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
+          leading: BackButton(
+            onPressed: () => Navigator.of(context).pop(_current),
+            color: AppColors.textDarkPrimary,
+          ),
+          title: const Text(
+            'Expense Details',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textDarkPrimary,
+            ),
+          ),
+          backgroundColor: AppColors.background,
+          foregroundColor: AppColors.textDarkPrimary,
+          elevation: 0,
+          iconTheme: IconThemeData(color: AppColors.textDarkPrimary),
           actions: [
           PopupMenuButton<String>(
+            icon: Icon(Icons.more_vert, color: AppColors.textDarkPrimary),
+            color: AppColors.background,
             onSelected: (value) async {
               if (value == 'edit') {
                 await _edit();
@@ -167,80 +165,166 @@ class _ExpenseDetailsPageState extends State<ExpenseDetailsPage> {
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem<String>(value: 'edit', child: Text('Edit')),
+              PopupMenuItem<String>(
+                value: 'edit',
+                child: Row(
+                  children: [
+                    Icon(Icons.edit, color: AppColors.textDarkPrimary, size: 20),
+                    const SizedBox(width: 12),
+                    Text('Edit', style: TextStyle(color: AppColors.textDarkPrimary)),
+                  ],
+                ),
+              ),
               if (!widget.isArchived)
-                const PopupMenuItem<String>(value: 'archive', child: Text('Archive'))
+                PopupMenuItem<String>(
+                  value: 'archive',
+                  child: Row(
+                    children: [
+                      Icon(Icons.archive, color: AppColors.textDarkPrimary, size: 20),
+                      const SizedBox(width: 12),
+                      Text('Archive', style: TextStyle(color: AppColors.textDarkPrimary)),
+                    ],
+                  ),
+                )
               else
-                const PopupMenuItem<String>(value: 'unarchive', child: Text('Unarchive')),
+                PopupMenuItem<String>(
+                  value: 'unarchive',
+                  child: Row(
+                    children: [
+                      Icon(Icons.unarchive, color: AppColors.textDarkPrimary, size: 20),
+                      const SizedBox(width: 12),
+                      Text('Unarchive', style: TextStyle(color: AppColors.textDarkPrimary)),
+                    ],
+                  ),
+                ),
             ],
           ),
         ],
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: Colors.orange.shade100,
-                  child: Text(
-                    _current.title.isNotEmpty ? _current.title[0].toUpperCase() : '?',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.orange.shade800,
-                      fontSize: 24,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Expense Content
+              Expanded(
+                child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        _current.title,
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      // Title Section
+                      Row(
+                        children: [
+                          // Icon
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.textDarkPrimary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.monetization_on_outlined,
+                              color: AppColors.textDarkPrimary,
+                              size: 32,
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          
+                          // Title and ID
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _current.title,
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textDarkPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'ID: ${_current.id}',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 4),
-                      Text('ID: ${_current.id}', style: const TextStyle(color: Colors.grey)),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Amount
+                      Text(
+                        '₹${_current.amount.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 32,
+                          color: AppColors.textDarkPrimary,
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Type Section
+                      Text(
+                        'Type',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: AppColors.textDarkPrimary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          _current.type,
+                          style: const TextStyle(
+                            color: AppColors.textDarkPrimary,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                      
+                      // Description Section
+                      if ((_current.description).trim().isNotEmpty) ...[
+                        const SizedBox(height: 24),
+                        Text(
+                          'Description',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          _current.description,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: AppColors.textDarkPrimary,
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                Text(
-                  '₹${_current.amount.toStringAsFixed(2)}',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.green),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'Type',
-              style: TextStyle(color: Colors.orange.shade800, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 6),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.orange.shade100,
-                borderRadius: BorderRadius.circular(12),
               ),
-              child: Text(_current.type, style: TextStyle(color: Colors.orange.shade800, fontWeight: FontWeight.w600)),
-            ),
-            if ((_current.description).trim().isNotEmpty) ...[
-              const SizedBox(height: 16),
-              Text(
-                'Description',
-                style: TextStyle(color: Colors.blue.shade800, fontWeight: FontWeight.w600),
-              ),
-              const SizedBox(height: 6),
-              Text(_current.description),
             ],
-          ],
+          ),
         ),
       ),
     ),

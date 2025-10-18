@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../constants/strings.dart';
 import '../constants/permissions.dart';
+import '../constants/style.dart';
 import '../utils/shared_preferences.dart';
 import '../widgets/permission_wrapper.dart';
 import 'create_item_page.dart';
@@ -207,7 +208,7 @@ class _InventoryPageState extends State<InventoryPage> {
                 const Text(
                   'Inventory Management',
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: Style.fontSize4,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
