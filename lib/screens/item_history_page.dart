@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 
 import '../constants/strings.dart';
 import '../constants/permissions.dart';
+import '../constants/colors.dart';
+import '../widgets/custom_dropdown.dart';
 import '../utils/shared_preferences.dart';
 import '../widgets/permission_wrapper.dart';
 
@@ -92,139 +94,249 @@ class _ItemHistoryPageState extends State<ItemHistoryPage> {
     return PermissionWrapper(
       permission: AppPermissions.getItemVariantHistory,
       child: Scaffold(
+        backgroundColor: AppColors.background,
         appBar: AppBar(
-          title: Text('${widget.item.name} - History'),
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
+          title: Text(
+            '${widget.item.name} - History',
+          style: const TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textDarkPrimary,
+          ),
         ),
-        body: Column(
-        children: [
-          // Variant selection
-          if (widget.item.itemVariants.length > 1) ...[
-            Container(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Select Variant:', style: TextStyle(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 8),
-                  DropdownButtonFormField<ItemVariant>(
-                    value: _selectedVariant,
-                    decoration: const InputDecoration(labelText: 'Variant'),
-                    items: widget.item.itemVariants.map((variant) {
-                      return DropdownMenuItem<ItemVariant>(
-                        value: variant,
-                        child: Text('${variant.name} - ₹${variant.price.toStringAsFixed(2)} (Stock: ${variant.quantity})'),
-                      );
-                    }).toList(),
-                    onChanged: _onVariantChanged,
-                  ),
-                ],
+        backgroundColor: AppColors.background,
+        foregroundColor: AppColors.textDarkPrimary,
+        elevation: 0,
+        iconTheme: IconThemeData(color: AppColors.textDarkPrimary),
+      ),
+      body: Column(
+          children: [
+            // Variant selection
+            if (widget.item.itemVariants.length > 1) ...[
+              Container(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Select Variant',
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textDarkPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    CustomDropdowns.custom<ItemVariant>(
+                      value: _selectedVariant,
+                      options: widget.item.itemVariants,
+                      displayText: (variant) => '${variant.name} - ₹${variant.price.toStringAsFixed(2)} (Stock: ${variant.quantity})',
+                      itemIcon: (variant) => Icons.inventory,
+                      onChanged: _onVariantChanged,
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const Divider(height: 1),
-          ],
-          
-          // History content
-          Expanded(
-            child: _selectedVariant == null
-                ? const Center(child: Text('Please select a variant to view history'))
-                : _isLoading && _history.isEmpty
-                    ? const Center(child: CircularProgressIndicator())
-                    : _history.isEmpty
-                        ? const Center(child: Text('No history found for this variant'))
-                        : ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemBuilder: (context, index) {
-                final h = _history[index];
-                final int change = h.quantity; // delta from response
-                final bool increased = change >= 0;
-                final Color chipColor = increased ? Colors.green.shade100 : Colors.red.shade100;
-                final Color chipText = increased ? Colors.green.shade700 : Colors.red.shade700;
-                return Card(
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: chipColor,
-                                    borderRadius: BorderRadius.circular(999),
+              Container(
+                height: 1,
+                color: AppColors.textSecondary.withValues(alpha: 0.2),
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+              ),
+            ],
+            
+            // History content
+            Expanded(
+              child: _selectedVariant == null
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.inventory_2_outlined,
+                            size: 64,
+                            color: AppColors.textSecondary,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Please select a variant to view history',
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : _isLoading && _history.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              CircularProgressIndicator(color: AppColors.textDarkPrimary),
+                              const SizedBox(height: 16),
+                              Text(
+                                'Loading history...',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : _history.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.history,
+                                    size: 64,
+                                    color: AppColors.textSecondary,
                                   ),
-                                  child: Text(
-                                    '${increased ? '+' : ''}${change}',
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No history found for this variant',
                                     style: TextStyle(
-                                      color: chipText,
-                                      fontWeight: FontWeight.w700,
+                                      fontSize: 16,
+                                      color: AppColors.textSecondary,
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 10),
-                                Text(
-                                  '${h.oldQuantity} → ${h.newQuantity}',
-                                  style: const TextStyle(fontWeight: FontWeight.w600),
-                                ),
-                              ],
-                            ),
-                            Text(
-                              h.createdAt.toLocal().toString(),
-                              style: const TextStyle(color: Colors.grey, fontSize: 12),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: Colors.blue.shade50,
-                                borderRadius: BorderRadius.circular(6),
+                                ],
                               ),
-                              child: Text(
-                                h.changeType,
-                                style: TextStyle(color: Colors.blue.shade800, fontWeight: FontWeight.w600, fontSize: 12),
-                              ),
+                            )
+                          : ListView.separated(
+                              padding: const EdgeInsets.all(20),
+                              itemBuilder: (context, index) {
+                                final h = _history[index];
+                                final int change = h.quantity; // delta from response
+                                final bool increased = change >= 0;
+                                final Color chipColor = increased ? AppColors.success.withValues(alpha: 0.1) : AppColors.danger.withValues(alpha: 0.1);
+                                final Color chipText = increased ? AppColors.success : AppColors.danger;
+                                return Container(
+                                  decoration: BoxDecoration(
+                                    color: AppColors.background,
+                                    borderRadius: BorderRadius.circular(12),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: AppColors.textSecondary.withValues(alpha: 0.1),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(16.0),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                                  decoration: BoxDecoration(
+                                                    color: chipColor,
+                                                    borderRadius: BorderRadius.circular(20),
+                                                  ),
+                                                  child: Text(
+                                                    '${increased ? '+' : ''}$change',
+                                                    style: TextStyle(
+                                                      color: chipText,
+                                                      fontWeight: FontWeight.w700,
+                                                      fontSize: 14,
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Text(
+                                                  '${h.oldQuantity} → ${h.newQuantity}',
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w600,
+                                                    color: AppColors.textDarkPrimary,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            Text(
+                                              h.createdAt.toLocal().toString().split('.')[0],
+                                              style: TextStyle(
+                                                color: AppColors.textSecondary,
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 12),
+                                        Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                              decoration: BoxDecoration(
+                                                color: AppColors.textDarkPrimary.withValues(alpha: 0.1),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: Text(
+                                                h.changeType,
+                                                style: const TextStyle(
+                                                  color: AppColors.textDarkPrimary,
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 12),
+                                        Wrap(
+                                          runSpacing: 6,
+                                          spacing: 12,
+                                          children: [
+                                            Text(
+                                              'Old: ${h.oldQuantity}',
+                                              style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                                            ),
+                                            Text(
+                                              'Change: ${increased ? '+' : ''}$change',
+                                              style: TextStyle(color: chipText, fontSize: 14),
+                                            ),
+                                            Text(
+                                              'New: ${h.newQuantity}',
+                                              style: TextStyle(color: AppColors.textSecondary, fontSize: 14),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 8),
+                                        if (h.reason != null && h.reason!.isNotEmpty)
+                                          Text(
+                                            'Reason: ${h.reason!}',
+                                            style: const TextStyle(
+                                              color: AppColors.textDarkPrimary,
+                                              fontSize: 14,
+                                            ),
+                                          ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'By ${h.updatedBy}',
+                                          style: TextStyle(
+                                            fontSize: 12,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              },
+                              separatorBuilder: (_, __) => const SizedBox(height: 12),
+                              itemCount: _history.length,
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Wrap(
-                          runSpacing: 4,
-                          spacing: 8,
-                          children: [
-                            Text('Old: ${h.oldQuantity}', style: const TextStyle(color: Colors.grey)),
-                            Text('Change: ${increased ? '+' : ''}${change}', style: TextStyle(color: chipText)),
-                            Text('New: ${h.newQuantity}', style: const TextStyle(color: Colors.grey)),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        if (h.reason != null && h.reason!.isNotEmpty)
-                          Text('Reason: ${h.reason!}')
-                        else
-                          const SizedBox.shrink(),
-                        const SizedBox(height: 4),
-                        Text('By ${h.updatedBy}', style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                      ],
-                    ),
-                  ),
-                );
-              },
-              separatorBuilder: (_, __) => const SizedBox(height: 8),
-              itemCount: _history.length,
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
     ),
     );
   }

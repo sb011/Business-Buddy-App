@@ -149,11 +149,12 @@ class CustomDialogs {
     required BuildContext context,
     required String itemName,
     required String itemType,
+    String? extraMessage,
   }) {
     return showConfirmation(
       context: context,
       title: 'Archive $itemType?',
-      message: 'Are you sure you want to archive "$itemName"? This action can be undone later.',
+      message: 'Are you sure you want to archive "$itemName"? This action can be undone later. ${extraMessage ?? ''}',
       confirmText: 'Archive',
       cancelText: 'Cancel',
       icon: Icons.archive,
@@ -166,11 +167,12 @@ class CustomDialogs {
     required BuildContext context,
     required String itemName,
     required String itemType,
+    String? extraMessage,
   }) {
     return showConfirmation(
       context: context,
       title: 'Delete $itemType?',
-      message: 'Are you sure you want to delete "$itemName"? This action cannot be undone.',
+      message: 'Are you sure you want to delete "$itemName"? This action cannot be undone. ${extraMessage ?? ''}',
       confirmText: 'Delete',
       cancelText: 'Cancel',
       icon: Icons.delete,

@@ -197,7 +197,7 @@ class _ExpensePageState extends State<ExpensePage> {
                     color: AppColors.textDarkPrimary,
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 8),
                 TextField(
                   controller: _searchController,
                   onChanged: _onSearchChanged,
@@ -353,18 +353,6 @@ class _ExpensePageState extends State<ExpensePage> {
                                             color: AppColors.textDarkPrimary,
                                           ),
                                         ),
-                                        if (expense.description.trim().isNotEmpty) ...[
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            expense.description,
-                                            style: TextStyle(
-                                              fontSize: 14,
-                                              color: AppColors.textSecondary,
-                                            ),
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ],
                                         const SizedBox(height: 8),
                                         Container(
                                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

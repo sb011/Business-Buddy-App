@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 
 import '../constants/strings.dart';
 import '../constants/permissions.dart';
-import '../constants/style.dart';
+import '../constants/colors.dart';
 import '../utils/shared_preferences.dart';
 import '../widgets/permission_wrapper.dart';
 import 'create_item_page.dart';
@@ -172,31 +172,32 @@ class _InventoryPageState extends State<InventoryPage> {
     return PermissionWrapper(
       permission: AppPermissions.getInventoryItem,
       child: Scaffold(
+        backgroundColor: AppColors.background,
         floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final createdItem = await Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const CreateItemPage()),
-          );
-          if (createdItem is Item) {
-            if (!mounted) return;
-            setState(() {
-              items = [createdItem, ...items];
-            });
-          }
-        },
-        backgroundColor: Colors.blue,
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
-      body: Column(
+          onPressed: () async {
+            final createdItem = await Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const CreateItemPage()),
+            );
+            if (createdItem is Item) {
+              if (!mounted) return;
+              setState(() {
+                items = [createdItem, ...items];
+              });
+            }
+          },
+          backgroundColor: AppColors.textDarkPrimary,
+          child: const Icon(Icons.add, color: Colors.white),
+        ),
+        body: Column(
         children: [
           // Header with Search Bar
           Container(
-            padding: const EdgeInsets.fromLTRB(16.0, 50.0, 16.0, 16.0), // Added top padding for status bar
+            padding: const EdgeInsets.fromLTRB(20.0, 50.0, 20.0, 20.0),
             decoration: BoxDecoration(
-              color: Colors.blue,
+              color: AppColors.background,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: AppColors.textSecondary.withValues(alpha: 0.1),
                   blurRadius: 4,
                   offset: const Offset(0, 2),
                 ),
@@ -206,24 +207,24 @@ class _InventoryPageState extends State<InventoryPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  'Inventory Management',
+                  'Inventory',
                   style: TextStyle(
-                    fontSize: Style.fontSize4,
+                    fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: AppColors.textDarkPrimary,
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 8),
                 TextField(
                   controller: _searchController,
                   onChanged: _onSearchChanged,
                   decoration: InputDecoration(
                     hintText: 'Search items...',
-                    hintStyle: TextStyle(color: Colors.grey.shade600),
-                    prefixIcon: const Icon(Icons.search, color: Colors.blue),
+                    hintStyle: TextStyle(color: AppColors.textSecondary),
+                    prefixIcon: Icon(Icons.search, color: AppColors.textDarkPrimary),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(Icons.clear, color: Colors.blue),
+                            icon: Icon(Icons.clear, color: AppColors.textDarkPrimary),
                             onPressed: () {
                               _searchController.clear();
                               _onSearchChanged('');
@@ -232,14 +233,18 @@ class _InventoryPageState extends State<InventoryPage> {
                         : null,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(color: AppColors.textSecondary.withValues(alpha: 0.3)),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: AppColors.textSecondary.withValues(alpha: 0.3)),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: Colors.white, width: 2),
+                      borderSide: BorderSide(color: AppColors.textDarkPrimary, width: 2),
                     ),
                     filled: true,
-                    fillColor: Colors.white,
+                    fillColor: AppColors.background,
                     contentPadding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 12,
@@ -263,7 +268,7 @@ class _InventoryPageState extends State<InventoryPage> {
                 await _fetchInventoryItems();
               },
               child: _isLoading && items.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
+                  ? Center(child: CircularProgressIndicator(color: AppColors.textDarkPrimary))
                   : items.isEmpty
                   ? Center(
                       child: Column(
@@ -274,19 +279,19 @@ class _InventoryPageState extends State<InventoryPage> {
                                 ? Icons.search_off
                                 : Icons.inventory_2_outlined,
                             size: 80,
-                            color: Colors.grey,
+                            color: AppColors.textSecondary,
                           ),
                           const SizedBox(height: 20),
                           Text(
                             _searchQuery.isNotEmpty
                                 ? 'No items found for "$_searchQuery"'
                                 : 'No items found',
-                            style: const TextStyle(fontSize: 18, color: Colors.grey),
+                            style: TextStyle(fontSize: 18, color: AppColors.textSecondary),
                           ),
                           if (_searchQuery.isEmpty)
-                            const Text(
+                            Text(
                               'Pull down to refresh',
-                              style: TextStyle(fontSize: 14, color: Colors.grey),
+                              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
                             ),
                         ],
                       ),
@@ -296,103 +301,112 @@ class _InventoryPageState extends State<InventoryPage> {
                       itemCount: items.length + (_isLoadingMore && !_hasReachedEnd ? 1 : 0),
                       itemBuilder: (context, index) {
                         if (index == items.length) {
-                          return const Center(
+                          return Center(
                             child: Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: CircularProgressIndicator(),
+                              padding: const EdgeInsets.all(16.0),
+                              child: CircularProgressIndicator(color: AppColors.textDarkPrimary),
                             ),
                           );
                         }
 
                         final item = items[index];
-                        return Card(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          child: ListTile(
-                            onTap: () async {
-                              final result = await Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => ItemDetailsPage(item: item),
-                                ),
-                              );
-                              if (result is Item) {
-                                if (!mounted) return;
-                                setState(() {
-                                  final int idx = items.indexWhere((it) => it.id == result.id);
-                                  if (idx != -1) {
-                                    items[idx] = result;
-                                  }
-                                });
-                              } else if (result is Map && result['archivedId'] is String) {
-                                if (!mounted) return;
-                                setState(() {
-                                  items.removeWhere((it) => it.id == result['archivedId']);
-                                });
-                              }
-                            },
-                            leading: CircleAvatar(
-                              backgroundColor: Colors.blue.shade100,
-                              child: Text(
-                                item.name[0].toUpperCase(),
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blue.shade800,
-                                ),
-                              ),
-                            ),
-                            title: Text(
-                              item.name,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(item.description),
-                                const SizedBox(height: 4),
-                                Row(
+                        return Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                          child: Material(
+                            color: AppColors.background,
+                            borderRadius: BorderRadius.circular(12),
+                            elevation: 2,
+                            shadowColor: AppColors.textSecondary.withValues(alpha: 0.1),
+                            child: InkWell(
+                              onTap: () async {
+                                final result = await Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) => ItemDetailsPage(item: item),
+                                  ),
+                                );
+                                if (result is Item) {
+                                  if (!mounted) return;
+                                  setState(() {
+                                    final int idx = items.indexWhere((it) => it.id == result.id);
+                                    if (idx != -1) {
+                                      items[idx] = result;
+                                    }
+                                  });
+                                } else if (result is Map && result['archivedId'] is String) {
+                                  if (!mounted) return;
+                                  setState(() {
+                                    items.removeWhere((it) => it.id == result['archivedId']);
+                                  });
+                                }
+                              },
+                              borderRadius: BorderRadius.circular(12),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
                                   children: [
+                                    // Leading Icon
                                     Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 2,
-                                      ),
+                                      padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: Colors.blue.shade100,
+                                        color: AppColors.textDarkPrimary.withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
-                                      child: Text(
-                                        item.category,
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.blue.shade800,
-                                          fontWeight: FontWeight.w500,
-                                        ),
+                                      child: Icon(
+                                        Icons.inventory_2_outlined,
+                                        color: AppColors.textDarkPrimary,
+                                        size: 24,
                                       ),
                                     ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Variants: ${item.itemVariants.length}',
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey,
+                                    const SizedBox(width: 16),
+                                    
+                                    // Content
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            item.name,
+                                            style: const TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.textDarkPrimary,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.textDarkPrimary.withValues(alpha: 0.1),
+                                                  borderRadius: BorderRadius.circular(8),
+                                                ),
+                                                child: Text(
+                                                  item.category,
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: AppColors.textDarkPrimary,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                'Variants: ${item.itemVariants.length}',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: AppColors.textSecondary,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ],
                                 ),
-                              ],
-                            ),
-                            trailing: Text(
-                              'ID: ${item.id.substring(0, 8)}...',
-                              style: const TextStyle(
-                                fontSize: 10,
-                                color: Colors.grey,
                               ),
                             ),
-                            isThreeLine: true,
                           ),
                         );
                       },

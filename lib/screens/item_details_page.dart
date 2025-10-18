@@ -7,7 +7,9 @@ import 'package:business_buddy_app/constants/permissions.dart';
 import 'package:business_buddy_app/widgets/permission_wrapper.dart';
 import 'package:flutter/material.dart';
 
-import '../constants/style.dart';
+import '../constants/colors.dart';
+import '../widgets/custom_button.dart';
+import '../widgets/custom_dialog.dart';
 import 'edit_item_page.dart';
 import 'add_stock_page.dart';
 import 'item_history_page.dart';
@@ -49,25 +51,11 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
   }
 
   Future<void> _archiveItem() async {
-    final bool? confirm = await showDialog<bool>(
+    final bool? confirm = await CustomDialogs.showArchiveConfirmation(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Archive Item?'),
-          content: const Text(
-              'Are you sure you want to archive this item? This will set the stock to 0 for the item.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Confirm'),
-            ),
-          ],
-        );
-      },
+      itemName: _currentItem.name,
+      itemType: 'Item',
+      extraMessage: "This action will result in all item variants having 0 stock."
     );
 
     if (confirm != true) return;
@@ -87,11 +75,14 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
       }
 
       final request = ItemArchiveRequest(itemId: _currentItem.id, isArchive: true);
+      if (!mounted) return;
       await InventoryAPI.archiveItem(context: context, token: token, itemArchiveRequest: request);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Item archived successfully')),
+      CustomDialogs.showSuccess(
+        context: context,
+        title: 'Success',
+        message: 'Item archived successfully',
       );
 
       // Return to inventory page with instruction to remove this item locally
@@ -113,24 +104,12 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
   }
 
   Future<void> _unarchiveItem() async {
-    final bool? confirm = await showDialog<bool>(
+    final bool? confirm = await CustomDialogs.showConfirmation(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Unarchive Item?'),
-          content: const Text('Are you sure you want to unarchive this item?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Confirm'),
-            ),
-          ],
-        );
-      },
+      title: 'Unarchive Item?',
+      message: 'Are you sure you want to unarchive this item?',
+      confirmText: 'Confirm',
+      cancelText: 'Cancel',
     );
 
     if (confirm != true) return;
@@ -150,11 +129,14 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
       }
 
       final request = ItemArchiveRequest(itemId: _currentItem.id, isArchive: false);
+      if (!mounted) return;
       await InventoryAPI.archiveItem(context: context, token: token, itemArchiveRequest: request);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Item unarchived successfully')),
+      CustomDialogs.showSuccess(
+        context: context,
+        title: 'Success',
+        message: 'Item unarchived successfully',
       );
 
       Navigator.of(context).pop({
@@ -175,25 +157,11 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
   }
 
   Future<void> _archiveVariant(ItemVariant variant) async {
-    final bool? confirm = await showDialog<bool>(
+    final bool? confirm = await CustomDialogs.showArchiveConfirmation(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Archive Variant?'),
-          content: const Text(
-              'Are you sure you want to archive this variant? This will set the stock to 0 for the variant.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Confirm'),
-            ),
-          ],
-        );
-      },
+      itemName: variant.name,
+      itemType: 'Variant',
+      extraMessage: "This action will result in the item variant having 0 stock."
     );
 
     if (confirm != true) return;
@@ -213,11 +181,14 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
         itemVariantId: variant.id,
         isArchive: true,
       );
+      if (!mounted) return;
       await InventoryAPI.archiveItemVariant(context: context, token: token, itemVariantArchiveRequest: request);
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Variant archived successfully')),
+      CustomDialogs.showSuccess(
+        context: context,
+        title: 'Success',
+        message: 'Variant archived successfully',
       );
 
       // Update local state immediately without additional API calls
@@ -252,198 +223,332 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
     return PermissionWrapper(
       permission: AppPermissions.getInventoryItem,
       child: Scaffold(
+        backgroundColor: AppColors.background,
         appBar: AppBar(
           leading: BackButton(
+            color: AppColors.textDarkPrimary,
             onPressed: () => Navigator.of(context).pop(_currentItem),
           ),
-          title: const Text('Item Details'),
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
-        actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) async {
-              if (value == 'edit') {
-                await _editItem();
-              } else if (value == 'history') {
-                await Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (context) => ItemHistoryPage(item: _currentItem),
-                  ),
-                );
-              } else if (value == 'archive' && !widget.isArchived) {
-                if (_isArchiving) return;
-                await _archiveItem();
-              } else if (value == 'unarchive' && widget.isArchived) {
-                if (_isUnarchiving) return;
-                await _unarchiveItem();
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem<String>(
-                value: 'edit',
-                child: Text('Edit'),
-              ),
-              const PopupMenuItem<String>(
-                value: 'history',
-                child: Text('History'),
-              ),
-              if (!widget.isArchived)
-                const PopupMenuItem<String>(
-                  value: 'archive',
-                  child: Text('Archive'),
-                )
-              else
-                const PopupMenuItem<String>(
-                  value: 'unarchive',
-                  child: Text('Unarchive'),
-                ),
-            ],
+          title: const Text(
+            'Item Details',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textDarkPrimary,
+            ),
           ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Item Header
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundColor: Colors.blue.shade100,
-                  child: Text(
-                    _currentItem.name.isNotEmpty ? _currentItem.name[0].toUpperCase() : '?',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blue.shade800,
-                      fontSize: Style.fontSize4,
+          backgroundColor: AppColors.background,
+          foregroundColor: AppColors.textDarkPrimary,
+          elevation: 0,
+          iconTheme: IconThemeData(color: AppColors.textDarkPrimary),
+          actions: [
+            PopupMenuButton<String>(
+              icon: Icon(Icons.more_vert, color: AppColors.textDarkPrimary),
+              color: AppColors.background,
+              onSelected: (value) async {
+                if (value == 'edit') {
+                  await _editItem();
+                } else if (value == 'history') {
+                  await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => ItemHistoryPage(item: _currentItem),
                     ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  );
+                } else if (value == 'archive' && !widget.isArchived) {
+                  if (_isArchiving) return;
+                  await _archiveItem();
+                } else if (value == 'unarchive' && widget.isArchived) {
+                  if (_isUnarchiving) return;
+                  await _unarchiveItem();
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem<String>(
+                  value: 'edit',
+                  child: Row(
                     children: [
-                      Text(
-                        _currentItem.name,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'ID: ${_currentItem.id}',
-                        style: const TextStyle(color: Colors.grey),
-                      ),
+                      Icon(Icons.edit, color: AppColors.textDarkPrimary),
+                      const SizedBox(width: 8),
+                      Text('Edit', style: TextStyle(color: AppColors.textDarkPrimary)),
                     ],
                   ),
                 ),
+                PopupMenuItem<String>(
+                  value: 'history',
+                  child: Row(
+                    children: [
+                      Icon(Icons.history, color: AppColors.textDarkPrimary),
+                      const SizedBox(width: 8),
+                      Text('History', style: TextStyle(color: AppColors.textDarkPrimary)),
+                    ],
+                  ),
+                ),
+                if (!widget.isArchived)
+                  PopupMenuItem<String>(
+                    value: 'archive',
+                    child: Row(
+                      children: [
+                        Icon(Icons.archive, color: AppColors.textDarkPrimary),
+                        const SizedBox(width: 8),
+                        Text('Archive', style: TextStyle(color: AppColors.textDarkPrimary)),
+                      ],
+                    ),
+                  )
+                else
+                  PopupMenuItem<String>(
+                    value: 'unarchive',
+                    child: Row(
+                      children: [
+                        Icon(Icons.unarchive, color: AppColors.textDarkPrimary),
+                        const SizedBox(width: 8),
+                        Text('Unarchive', style: TextStyle(color: AppColors.textDarkPrimary)),
+                      ],
+                    ),
+                  ),
               ],
             ),
-            const SizedBox(height: 20),
-            
-            // Item Details Section
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Item Details',
-                      style: TextStyle(
-                        color: Colors.blue.shade800,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    
-                    // Description
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text('Description: ', style: TextStyle(fontWeight: FontWeight.w500)),
-                        Expanded(child: Text(_currentItem.description)),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    
-                    // Category and Variants Count
-                    Row(
-                      children: [
-                        const Text('Category: ', style: TextStyle(fontWeight: FontWeight.w500)),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade100,
-                            borderRadius: BorderRadius.circular(12),
+          ],
+        ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Scrollable content
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Item Header
+                      Row(
+                        children: [
+                          Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              color: AppColors.textDarkPrimary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(
+                              Icons.inventory_2_outlined,
+                              color: AppColors.textDarkPrimary,
+                              size: 28,
+                            ),
                           ),
-                          child: Text(
-                            _currentItem.category,
-                            style: TextStyle(color: Colors.blue.shade800, fontWeight: FontWeight.w600),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  _currentItem.name,
+                                  style: const TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppColors.textDarkPrimary,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'ID: ${_currentItem.id}',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: AppColors.textSecondary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      
+                      // Item Details Section
+                      Text(
+                        'Description',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textDarkPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _currentItem.description,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: AppColors.textDarkPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      
+                      // Category
+                      Text(
+                        'Category',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textDarkPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: AppColors.textDarkPrimary.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          _currentItem.category,
+                          style: const TextStyle(
+                            color: AppColors.textDarkPrimary,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        const Text('Variants: ', style: TextStyle(fontWeight: FontWeight.w500)),
-                        Text('${_currentItem.itemVariants.where((v) => !v.archived).length}'),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            
-            const SizedBox(height: 20),
-            
-            // Variants section
-            Text(
-              'Item Variants',
-              style: TextStyle(
-                color: Colors.blue.shade800,
-                fontWeight: FontWeight.w600,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 8),
-            
-            if (_currentItem.itemVariants.where((v) => !v.archived).isEmpty)
-              const Card(
-                child: Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Text('No variants available', style: TextStyle(color: Colors.grey)),
-                ),
-              )
-            else
-              ..._currentItem.itemVariants.where((v) => !v.archived).map((variant) {
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.green.shade100,
-                      child: Icon(
-                        Icons.inventory,
-                        color: Colors.green.shade700,
                       ),
-                    ),
-                    title: Text(variant.name),
-                    subtitle: Text('₹${variant.price.toStringAsFixed(2)} • Stock: ${variant.quantity}'),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
+                      const SizedBox(height: 20),
+                      
+                      // Variants section
+                      Text(
+                        'Item Variants',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textDarkPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      
+                      if (_currentItem.itemVariants.where((v) => !v.archived).isEmpty)
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: AppColors.background,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.textSecondary.withValues(alpha: 0.3),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.inventory_2_outlined,
+                                color: AppColors.textSecondary,
+                                size: 24,
+                              ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'No variants available',
+                                style: TextStyle(
+                                  color: AppColors.textSecondary,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      else
+                        ..._currentItem.itemVariants.where((v) => !v.archived).map((variant) {
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            child: Material(
+                              color: AppColors.background,
+                              borderRadius: BorderRadius.circular(12),
+                              elevation: 2,
+                              shadowColor: AppColors.textSecondary.withValues(alpha: 0.1),
+                              child: ListTile(
+                                leading: Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.textDarkPrimary.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.inventory,
+                                    color: AppColors.textDarkPrimary,
+                                    size: 20,
+                                  ),
+                                ),
+                                title: Text(
+                                  variant.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.textDarkPrimary,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  '₹${variant.price.toStringAsFixed(2)} • Stock: ${variant.quantity}',
+                                  style: TextStyle(color: AppColors.textSecondary),
+                                ),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (!widget.isArchived) ...[
+                                      IconButton(
+                                        icon: const Icon(Icons.edit, color: AppColors.textDarkPrimary),
+                                        onPressed: () async {
+                                          final updated = await Navigator.of(context).push<Item>(
+                                            MaterialPageRoute(
+                                              builder: (context) => UpdateVariantPage(
+                                                item: _currentItem,
+                                                variant: variant,
+                                              ),
+                                            ),
+                                          );
+                                          if (updated is Item) {
+                                            if (!mounted) return;
+                                            setState(() {
+                                              _currentItem = updated;
+                                            });
+                                          }
+                                        },
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(Icons.archive, color: AppColors.danger),
+                                        onPressed: () => _archiveVariant(variant),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
+              ),
+              
+              // Fixed bottom buttons
+              if (!widget.isArchived) ...[
+                Container(
+                  padding: const EdgeInsets.all(15.0),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.textSecondary.withValues(alpha: 0.1),
+                        offset: const Offset(0, -3),
+                        blurRadius: 6,
+                        spreadRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: SafeArea(
+                    top: false,
+                    child: Row(
                       children: [
-                        if (!widget.isArchived) ...[
-                          IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.orange),
+                        Expanded(
+                          child: CustomButtons.secondary(
+                            text: 'Add Variant',
+                            icon: const Icon(Icons.add),
                             onPressed: () async {
                               final updated = await Navigator.of(context).push<Item>(
                                 MaterialPageRoute(
-                                  builder: (context) => UpdateVariantPage(
-                                    item: _currentItem,
-                                    variant: variant,
-                                  ),
+                                  builder: (context) => AddVariantPage(item: _currentItem),
                                 ),
                               );
                               if (updated is Item) {
@@ -454,69 +559,35 @@ class _ItemDetailsPageState extends State<ItemDetailsPage> {
                               }
                             },
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.archive, color: Colors.red),
-                            onPressed: () => _archiveVariant(variant),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: CustomButtons.primary(
+                            text: 'Add Stock',
+                            icon: const Icon(Icons.add_chart),
+                            onPressed: () async {
+                              final updated = await Navigator.of(context).push<Item>(
+                                MaterialPageRoute(
+                                  builder: (context) => AddStockPage(item: _currentItem),
+                                ),
+                              );
+                              if (updated is Item) {
+                                if (!mounted) return;
+                                setState(() {
+                                  _currentItem = updated;
+                                });
+                              }
+                            },
                           ),
-                        ],
+                        ),
                       ],
                     ),
                   ),
-                );
-              }).toList(),
-              
-              // Add Variant Button
-              if (!widget.isArchived) ...[
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: () async {
-                      final updated = await Navigator.of(context).push<Item>(
-                        MaterialPageRoute(
-                          builder: (context) => AddVariantPage(item: _currentItem),
-                        ),
-                      );
-                      if (updated is Item) {
-                        if (!mounted) return;
-                        setState(() {
-                          _currentItem = updated;
-                        });
-                      }
-                    },
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add Variant'),
-                  ),
                 ),
               ],
-              
-              // Add Stock Button
-              if (!widget.isArchived) ...[
-                const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () async {
-                      final updated = await Navigator.of(context).push<Item>(
-                        MaterialPageRoute(
-                          builder: (context) => AddStockPage(item: _currentItem),
-                        ),
-                      );
-                      if (updated is Item) {
-                        if (!mounted) return;
-                        setState(() {
-                          _currentItem = updated;
-                        });
-                      }
-                    },
-                    icon: const Icon(Icons.add_chart),
-                    label: const Text('Add Stock'),
-                  ),
-                ),
-              ],
-          ],
+            ],
+          ),
         ),
-      ),
     ),
     );
   }

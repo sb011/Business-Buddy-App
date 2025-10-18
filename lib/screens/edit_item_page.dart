@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 
 import '../constants/strings.dart';
 import '../constants/permissions.dart';
+import '../constants/colors.dart';
+import '../widgets/custom_text_field.dart';
+import '../widgets/custom_button.dart';
 import '../utils/shared_preferences.dart';
 import '../widgets/permission_wrapper.dart';
 
@@ -99,57 +102,104 @@ class _EditItemPageState extends State<EditItemPage> {
     return PermissionWrapper(
       permission: AppPermissions.updateItem,
       child: Scaffold(
+        backgroundColor: AppColors.background,
         appBar: AppBar(
-          title: const Text('Edit Item'),
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
+          title: const Text(
+            'Edit Item',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textDarkPrimary,
+            ),
+          ),
+          backgroundColor: AppColors.background,
+          foregroundColor: AppColors.textDarkPrimary,
+          elevation: 0,
+          iconTheme: IconThemeData(color: AppColors.textDarkPrimary),
         ),
-        body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
-                validator: (value) => (value == null || value.trim().isEmpty) ? 'Enter name' : null,
-                textInputAction: TextInputAction.next,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header Section
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Edit Item',
+                        style: TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textDarkPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Update details for "${widget.item.name}"',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                    ],
+                  ),
+                  
+                  // Form Fields
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          CustomTextField(
+                            controller: _nameController,
+                            hintText: 'Item Name',
+                            prefixIcon: Icons.inventory_2_outlined,
+                            validator: (value) => (value == null || value.trim().isEmpty) ? 'Enter name' : null,
+                            textInputAction: TextInputAction.next,
+                          ),
+                          const SizedBox(height: 20),
+                          
+                          CustomTextField(
+                            controller: _descriptionController,
+                            hintText: 'Description',
+                            prefixIcon: Icons.description,
+                            validator: (value) => (value == null || value.trim().isEmpty) ? 'Enter description' : null,
+                            textInputAction: TextInputAction.next,
+                            maxLines: 3,
+                          ),
+                          const SizedBox(height: 20),
+                          
+                          CustomTextField(
+                            controller: _categoryController,
+                            hintText: 'Category',
+                            prefixIcon: Icons.category,
+                            validator: (value) => (value == null || value.trim().isEmpty) ? 'Enter category' : null,
+                            textInputAction: TextInputAction.done,
+                            onFieldSubmitted: (_) => _submit(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  
+                  // Submit Button
+                  const SizedBox(height: 20),
+                  CustomButtons.primary(
+                    text: 'Save Changes',
+                    onPressed: _isSubmitting ? null : _submit,
+                    isLoading: _isSubmitting,
+                    loadingText: 'Saving...',
+                  ),
+                  const SizedBox(height: 20),
+                ],
               ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _descriptionController,
-                decoration: const InputDecoration(labelText: 'Description'),
-                validator: (value) => (value == null || value.trim().isEmpty) ? 'Enter description' : null,
-                textInputAction: TextInputAction.next,
-                maxLines: 2,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _categoryController,
-                decoration: const InputDecoration(labelText: 'Category'),
-                validator: (value) => (value == null || value.trim().isEmpty) ? 'Enter category' : null,
-                textInputAction: TextInputAction.done,
-                onFieldSubmitted: (_) => _submit(),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : _submit,
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Save Changes'),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
-      ),
     ),
     );
   }

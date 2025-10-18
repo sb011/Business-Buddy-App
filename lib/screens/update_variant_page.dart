@@ -5,6 +5,9 @@ import 'package:flutter/material.dart';
 
 import '../constants/strings.dart';
 import '../constants/permissions.dart';
+import '../constants/colors.dart';
+import '../widgets/custom_text_field.dart';
+import '../widgets/custom_button.dart';
 import '../utils/shared_preferences.dart';
 import '../widgets/permission_wrapper.dart';
 
@@ -114,81 +117,155 @@ class _UpdateVariantPageState extends State<UpdateVariantPage> {
     return PermissionWrapper(
       permission: AppPermissions.updateItemVariant,
       child: Scaffold(
+        backgroundColor: AppColors.background,
         appBar: AppBar(
-          title: const Text('Update Variant'),
-          backgroundColor: Colors.orange,
-          foregroundColor: Colors.white,
+          title: const Text(
+            'Update Variant',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: AppColors.textDarkPrimary,
+            ),
+          ),
+          backgroundColor: AppColors.background,
+          foregroundColor: AppColors.textDarkPrimary,
+          elevation: 0,
+          iconTheme: IconThemeData(color: AppColors.textDarkPrimary),
         ),
-        body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: ListView(
-            children: [
-              // Variant info
-              Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header Section
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Variant Information',
+                      const Text(
+                        'Update Variant',
                         style: TextStyle(
-                          color: Colors.orange.shade800,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textDarkPrimary,
                         ),
                       ),
-                      const SizedBox(height: 12),
-                      Text('Item: ${widget.item.name}'),
-                      Text('Current Stock: ${widget.variant.quantity}'),
-                      Text('Status: ${widget.variant.archived ? "Archived" : "Active"}'),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Edit details for "${widget.variant.name}"',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
                     ],
                   ),
-                ),
+                  
+                  // Variant Info Card
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: AppColors.background,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.textSecondary.withValues(alpha: 0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Variant Information',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.textDarkPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Icon(Icons.inventory_2_outlined, color: AppColors.textDarkPrimary, size: 20),
+                            const SizedBox(width: 8),
+                            Text('Item: ${widget.item.name}', style: TextStyle(color: AppColors.textDarkPrimary)),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(Icons.inventory, color: AppColors.textDarkPrimary, size: 20),
+                            const SizedBox(width: 8),
+                            Text('Current Stock: ${widget.variant.quantity}', style: TextStyle(color: AppColors.textDarkPrimary)),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(Icons.info, color: AppColors.textDarkPrimary, size: 20),
+                            const SizedBox(width: 8),
+                            Text('Status: ${widget.variant.archived ? "Archived" : "Active"}', style: TextStyle(color: AppColors.textDarkPrimary)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  const SizedBox(height: 32),
+                  
+                  // Form Fields
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        children: [
+                          CustomTextField(
+                            controller: _nameController,
+                            hintText: 'Variant Name',
+                            prefixIcon: Icons.label,
+                            validator: (value) => (value == null || value.trim().isEmpty) ? 'Enter variant name' : null,
+                            textInputAction: TextInputAction.next,
+                          ),
+                          const SizedBox(height: 20),
+                          
+                          CustomTextField(
+                            controller: _priceController,
+                            hintText: 'Price (₹)',
+                            prefixIcon: Icons.currency_rupee,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) return 'Enter price';
+                              final parsed = double.tryParse(value.trim());
+                              if (parsed == null || parsed < 0) return 'Enter valid price';
+                              return null;
+                            },
+                            textInputAction: TextInputAction.done,
+                            onFieldSubmitted: (_) => _submit(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  
+                  // Submit Button
+                  const SizedBox(height: 20),
+                  CustomButtons.primary(
+                    text: 'Update Variant',
+                    onPressed: _isSubmitting ? null : _submit,
+                    isLoading: _isSubmitting,
+                    loadingText: 'Updating...',
+                  ),
+                  const SizedBox(height: 20),
+                ],
               ),
-              
-              const SizedBox(height: 20),
-              
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Variant Name'),
-                validator: (value) => (value == null || value.trim().isEmpty) ? 'Enter variant name' : null,
-                textInputAction: TextInputAction.next,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _priceController,
-                decoration: const InputDecoration(labelText: 'Price'),
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                validator: (value) {
-                  if (value == null || value.trim().isEmpty) return 'Enter price';
-                  final parsed = double.tryParse(value.trim());
-                  if (parsed == null || parsed < 0) return 'Enter valid price';
-                  return null;
-                },
-                textInputAction: TextInputAction.done,
-                onFieldSubmitted: (_) => _submit(),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: _isSubmitting ? null : _submit,
-                  child: _isSubmitting
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Update Variant'),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
-      ),
     ),
     );
   }
